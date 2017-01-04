@@ -27,6 +27,17 @@ static UINT indicators[] =
     ID_INDICATOR_SCRL,
 };
 
+
+static UINT main_toolbar_button[] = {
+    ID_FILE_NEW,
+    ID_FILE_OPEN,
+    ID_FILE_SAVE,
+    ID_SEPARATOR,
+    ID_FILE_OPENSTL_PART,
+    ID_FILE_REMOVESTLPART,
+    ID_FILE_SAVESTL_PART
+};
+
 static UINT display_toolbar_button[] = {
     ID_VIEW_FRONT_VIEW,
     ID_VIEW_BACK_VIEW,
@@ -62,19 +73,15 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
     if (CFrameWnd::OnCreate(lpCreateStruct) == -1)
         return -1;
 
-    if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
-        !m_wndToolBar.LoadToolBar(IDR_MAINFRAME)) {
+    if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | 
+        CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC)) {
         TRACE0("Failed to create toolbar\n");
         return -1;      // fail to create
     }
 
-    //file toolbar
-    CBitmap bm;
-    bm.LoadBitmap(IDB_BITMAP1);
-    m_fileToolImage.Create(40, 40, TRUE | ILC_COLOR24, 24, 0);
-    m_fileToolImage.Add(&bm, (CBitmap*)NULL);
-    bm.Detach();
-    m_wndToolBar.GetToolBarCtrl().SetImageList(&m_fileToolImage);
+    SetUpToolBar(&m_wndToolBar, 50, 50, 40, 40, main_toolbar_button,
+        sizeof(main_toolbar_button) / sizeof(main_toolbar_button[0]),
+        &m_fileToolImage, IDB_BITMAP1);
 
     if (!m_wndDisplayBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP
         | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC)) {
@@ -158,12 +165,12 @@ void CMainFrame::SetUpToolBar(CToolBar* Bar,
 
     //设置ToolBar的图标列表
     CBitmap bm;
-    m_displayImage.Create(cx_img, cy_img, TRUE | ILC_COLOR24, 24, 0);
+    pImageList->Create(cx_img, cy_img, TRUE | ILC_COLOR24, 24, 0);
     bm.LoadBitmap(nIDResource);
-    m_displayImage.Add(&bm, (CBitmap*)NULL);
+    pImageList->Add(&bm, (CBitmap*)NULL);
     bm.Detach();
 
-    Bar->GetToolBarCtrl().SetImageList(&m_displayImage);
+    Bar->GetToolBarCtrl().SetImageList(pImageList);
 }
 
 void CMainFrame::DockControlBarLeftOf(CToolBar* Bar,CToolBar* LeftOf)

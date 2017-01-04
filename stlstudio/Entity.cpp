@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include <stdio.h>
 #include "Entity.h"
-
+#include "public.h"
 
 CEntity::CEntity()
 {
@@ -128,71 +128,6 @@ void CSTLModel::Draw(COpenGLDC* pDC)
         m_TriList[i]->Draw(pDC);
 }
 
-//load with STL File
-BOOL CSTLModel::LoadSTLFile(LPCTSTR stlfile)
-{
-    FILE* file;
-    errno_t err;
-    if( (err  = _tfopen_s( &file, stlfile, _T("r"))) !=0 )
-        return FALSE;
-
-    char str[80];
-    CTriChip* tri = NULL;
-    while(fscanf_s(file,"%s",str,80)==1){
-        if(strncmp(str,"normal",6)==0){
-            tri = new CTriChip();
-            if (!tri)
-                continue;
-
-            fscanf_s(file,"%lf %lf %lf",&(tri->normal.dx),&(tri->normal.dy),&(tri->normal.dz));
-            fscanf_s(file,"%*s %*s");
-            fscanf_s(file,"%*s %lf %lf %lf",&(tri->vex[0].x),&(tri->vex[0].y),&(tri->vex[0].z));
-            fscanf_s(file,"%*s %lf %lf %lf",&(tri->vex[1].x),&(tri->vex[1].y),&(tri->vex[1].z));
-            fscanf_s(file,"%*s %lf %lf %lf",&(tri->vex[2].x),&(tri->vex[2].y),&(tri->vex[2].z));
-            Add(tri);
-        }
-    }
-
-    m_bModified = TRUE;
-
-    return TRUE;
-}
-
-BOOL CSTLModel::SaveSTLFile(LPCTSTR stlfile)
-{
-    FILE *p_file = NULL;
-    char szfilename[256] = {0};
-    int nLength = 0;
-    CTriChip* tri = NULL;
-
-    if (IsEmpty())
-        return FALSE;
-
-    nLength = WideCharToMultiByte(CP_ACP, 0, stlfile, wcslen(stlfile), NULL, 0, NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, stlfile, wcslen(stlfile), szfilename, nLength, NULL, NULL);
-
-    p_file = fopen(szfilename, "wb");
-    if (!p_file)
-        return FALSE;
-
-    fprintf(p_file, "%s\n", "solid");
-    for(int i = 0; i < m_TriList.GetSize(); i++) {
-        tri = m_TriList[i];
-        fprintf(p_file, " facet normal %e %e %e\n", tri->normal.dx, tri->normal.dy, tri->normal.dz);
-        fprintf(p_file, "  outer loop\n");
-        fprintf(p_file, "   vertex %e %e %e\n", tri->vex[0].x, tri->vex[0].y, tri->vex[0].z);
-        fprintf(p_file, "   vertex %e %e %e\n", tri->vex[1].x, tri->vex[1].y, tri->vex[1].z);
-        fprintf(p_file, "   vertex %e %e %e\n", tri->vex[2].x, tri->vex[2].y, tri->vex[2].z);
-        fprintf(p_file, "  endloop\n");
-    }
-    fprintf(p_file, "%s\n", "endsolid");
-
-    fclose(p_file);
-    p_file = NULL;
-
-    return TRUE;
-}
-
 void CSTLModel::UpdateBox()
 {
     if(m_pBox){
@@ -224,9 +159,63 @@ void CSTLModel::UpdateBox()
     m_bModified = FALSE;
 }
 
-void CSTLModel::HitHandler(void)
+//load with STL File
+int CSTLModel::LoadSTLFile(const char* filename)
 {
-    m_bHighLight = !m_bHighLight;
+    FILE* p_file = NULL;
+    p_file = fopen(filename, "rb");
+    if (!p_file)
+        return -1;
+
+    char str[80];
+    CTriChip* tri = NULL;
+    while(fscanf_s(p_file, "%s", str, 80) == 1) {
+        if(strncmp(str, "normal", 6) == 0) {
+            tri = new CTriChip();
+            if (!tri)
+                continue;
+
+            fscanf_s(p_file, "%lf %lf %lf", &(tri->normal.dx), &(tri->normal.dy), &(tri->normal.dz));
+            fscanf_s(p_file, "%*s %*s");
+            fscanf_s(p_file, "%*s %lf %lf %lf", &(tri->vex[0].x), &(tri->vex[0].y), &(tri->vex[0].z));
+            fscanf_s(p_file, "%*s %lf %lf %lf", &(tri->vex[1].x), &(tri->vex[1].y), &(tri->vex[1].z));
+            fscanf_s(p_file, "%*s %lf %lf %lf", &(tri->vex[2].x), &(tri->vex[2].y), &(tri->vex[2].z));
+            Add(tri);
+        }
+    }
+
+    m_bModified = TRUE;
+
+    return 0;
+}
+
+int CSTLModel::SaveSTLFile(const char* filename)
+{
+    FILE *p_file = NULL;
+    CTriChip* tri = NULL;
+
+    if (IsEmpty())
+        return -1;
+
+    p_file = fopen(filename, "wb");
+    if (!p_file)
+        return -1;
+
+    fprintf(p_file, "%s\n", "solid");
+    for(int i = 0; i < m_TriList.GetSize(); i++) {
+        tri = m_TriList[i];
+        fprintf(p_file, " facet normal %e %e %e\n", tri->normal.dx, tri->normal.dy, tri->normal.dz);
+        fprintf(p_file, "  outer loop\n");
+        fprintf(p_file, "   vertex %e %e %e\n", tri->vex[0].x, tri->vex[0].y, tri->vex[0].z);
+        fprintf(p_file, "   vertex %e %e %e\n", tri->vex[1].x, tri->vex[1].y, tri->vex[1].z);
+        fprintf(p_file, "   vertex %e %e %e\n", tri->vex[2].x, tri->vex[2].y, tri->vex[2].z);
+        fprintf(p_file, "  endloop\n");
+    }
+    fprintf(p_file, "%s\n", "endsolid");
+
+    fclose(p_file);
+    p_file = NULL;
+    return 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -266,13 +255,29 @@ Params: bv[IN] -- direction vector
 Return: 0  -- modified
         -1 -- not modified
 -----------------------------------------------------------------------------*/
-int CSTLModel::Rotate(VECTOR3D bv, double angle)
+int CSTLModel::RotateAroundCenter(VECTOR3D bv, double angle)
 {
-    CTriChip* tri = NULL;
     CPoint3D point;
 
-    //get reference point
     if (!GetCenterPoint(point))
+        return -1;
+
+    return Rotate(bv, point, angle);
+}
+
+/*-----------------------------------------------------------------------------
+Function: Rotate the object refer to a refer point
+Params: bv[IN] -- direction vector
+        ref_pt[IN] -- refer point
+        angle[IN] -- angle to rotate
+Return: 0  -- modified
+        -1 -- not modified
+-----------------------------------------------------------------------------*/
+int CSTLModel::Rotate(VECTOR3D bv, CPoint3D ref_pt, double angle)
+{
+    CTriChip* tri = NULL;
+
+    if (IsEmpty())
         return -1;
 
     for(int i=0; i < m_TriList.GetSize(); i++) {
@@ -280,7 +285,7 @@ int CSTLModel::Rotate(VECTOR3D bv, double angle)
         ASSERT(tri);
 
         for (int n = 0; n < 3; n++)
-            RotatePoint(bv, angle, point, tri->vex[n]);
+            RotatePoint(bv, angle, ref_pt, tri->vex[n]);
 
         RotateVector(bv, angle, tri->normal);
     }
@@ -291,28 +296,46 @@ int CSTLModel::Rotate(VECTOR3D bv, double angle)
 }
 
 /*-----------------------------------------------------------------------------
-Function: Scale the object
+Function: Scale the object around the center of the model
 Params: fx[IN] -- scale factor in x direction
         fy[IN] -- scale factor in y direction
         fz[IN] -- scale factor in z direction
 Return: 0  -- modified
         -1 -- not modified
 -----------------------------------------------------------------------------*/
-int CSTLModel::Scale(double fx, double fy, double fz)
+int CSTLModel::ScaleAroundCenter(double fx, double fy, double fz)
 {
-    CTriChip* tri = NULL;
     CPoint3D point;
 
     //get reference point
     if (!GetCenterPoint(point))
-        return 0;
+        return -1;
+
+    return Scale(point, fx, fy, fz);
+}
+
+/*-----------------------------------------------------------------------------
+Function: Scale the object around a refer point
+Params: ref_pt[IN] -- refer point
+        fx[IN] -- scale factor in x direction
+        fy[IN] -- scale factor in y direction
+        fz[IN] -- scale factor in z direction
+Return: 0  -- modified
+        -1 -- not modified
+-----------------------------------------------------------------------------*/
+int CSTLModel::Scale(CPoint3D ref_pt, double fx, double fy, double fz)
+{
+    CTriChip* tri = NULL;
+
+    if (IsEmpty())
+        return -1;
 
     for(int i=0; i < m_TriList.GetSize(); i++) {
         tri = m_TriList[i];
         ASSERT(tri);
 
         for (int n = 0; n < 3; n++)
-            ScalePoint(point, tri->vex[n], fx, fy, fz);
+            ScalePoint(ref_pt, tri->vex[n], fx, fy, fz);
     }
 
     m_bModified = TRUE;
@@ -320,11 +343,15 @@ int CSTLModel::Scale(double fx, double fy, double fz)
     return 0;
 }
 
+void CSTLModel::ReverseHighLight(void)
+{
+    m_bHighLight = !m_bHighLight;
+}
+
 
 //////////////////////////////////////////
 CPart::CPart()
 {
-    m_StlModelSelected = NULL;
 }
 
 CPart::~CPart()
@@ -354,8 +381,26 @@ void CPart::RemoveAllEntity()
     for(int i=0;i<m_EntList.GetSize();i++)
         delete m_EntList[i];
     m_EntList.RemoveAll();
-    m_StlModelSelected = NULL;
     m_bModified = TRUE;
+}
+
+int CPart::RemoveEntity(CEntity* ent)
+{
+    for(int i = 0; i < m_EntList.GetSize(); i++) {
+        if (m_EntList[i] == ent) {
+            m_EntList.RemoveAt(i);
+            delete ent;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+//attrib accessing
+BOOL CPart::IsEmpty()
+{
+    return m_EntList.GetSize() == 0;
 }
 
 void CPart::UpdateBox()
@@ -379,53 +424,228 @@ void CPart::UpdateBox()
     m_bModified = FALSE;
 }
 
+/*-------------------------------------------------------------------
+Function: Load data from model file. The file should be save in the
+          format:
+             file head -- "WXLSTLMODEL"
+             stlfile count -- int
+             stlfile name1 -- char[256]
+             stlfile name2 -- char[256]
+
+          All the objects are set highlight state.
+
+Params: file[IN] -- file name
+Return: 0  -- success
+        -1 -- failed
+-------------------------------------------------------------------*/
+int CPart::LoadModel(LPCTSTR file)
+{
+    FILE *p_file = NULL;
+    char szFilePath[256] = {0};
+    char buffer[256] = {0};
+    int stlfile_count = 0;
+    int ret = 0;
+
+    RemoveAllEntity();
+
+    w2c(file, szFilePath);
+
+    p_file = fopen(szFilePath, "rb");
+    if (!p_file)
+        return -1;
+
+    //read head
+    ret = fread(buffer, strlen(MODEL_FILE_HEAD), 1, p_file);
+    if (ret <= 0) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    if (strcmp(buffer, MODEL_FILE_HEAD)) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    //read stl file count
+    ret = fread(&stlfile_count, sizeof(stlfile_count), 1, p_file);
+    if (ret <= 0) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    //load each stl file
+    CSTLModel* pSTLModel = NULL;
+    for (int i = 0; i < stlfile_count; i++) {
+        ret = fread(buffer, sizeof(buffer), 1, p_file);
+        if (ret <= 0) {
+            fclose(p_file);
+            p_file = NULL;
+            return -1;
+        }
+
+        CSTLModel* pSTLModel = new CSTLModel();
+        if (!pSTLModel)
+            return -1;
+
+        pSTLModel->LoadSTLFile(buffer);
+        if(pSTLModel->IsEmpty())
+            delete pSTLModel;
+        else {
+            AddEntity(pSTLModel);
+            pSTLModel->SetHighLight(TRUE);
+        }
+    }
+
+    return 0;
+}
+
+int CPart::LoadSTLFile(LPCTSTR file)
+{
+    CSTLModel* pSTLModel = new CSTLModel();
+    if (!pSTLModel)
+        return -1;
+
+    char szFilePath[256] = {0};
+
+    w2c(file, szFilePath);
+    pSTLModel->LoadSTLFile(szFilePath);
+
+    if(pSTLModel->IsEmpty()) {
+        delete pSTLModel;
+        return -1;
+    }
+    else {
+        AddEntity(pSTLModel);
+        pSTLModel->SetHighLight(TRUE);
+    }
+
+    return 0;
+}
+
+/*-------------------------------------------------------------------
+Function: Save data to model file. The file should be save in the
+          format:
+             file head -- "WXLSTLMODEL"
+             stlfile count -- int
+             stlfile name1 -- char[256]
+             stlfile name2 -- char[256]
+Params: file[IN] -- file name
+Return: 0  -- success
+        -1 -- failed
+-------------------------------------------------------------------*/
+int CPart::ExportModel(LPCTSTR file)
+{
+    FILE *p_file = NULL;
+    char szFilePath[256] = {0};
+    int ret = 0;
+
+    if (IsEmpty())
+        return 0;
+
+    w2c(file, szFilePath);
+
+    p_file = fopen(szFilePath, "wb");
+    if (!p_file)
+        return -1;
+
+    //file head
+    ret = fwrite(MODEL_FILE_HEAD, strlen(MODEL_FILE_HEAD), 1, p_file);
+    if (ret <= 0) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    //stl file count
+    int stlfile_count = m_EntList.GetSize();
+    ret = fwrite(&stlfile_count, sizeof(stlfile_count), 1, p_file);
+    if (ret <= 0) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    //get directory name
+    char szDir[256] = {};
+    wchar_t szWDir[256] = {};
+    char* p = NULL;
+    strcpy(szDir, szFilePath);
+    p = strrchr(szDir, '.');
+    if (p)
+        *p = 0;
+
+    c2w(szDir, szWDir);
+
+    //clean directory
+    CFileFind fileFind;
+    if(fileFind.FindFile(szWDir))
+        DeleteDir(szWDir);
+
+    CreateDirectory(szWDir, NULL);
+
+    char szSTLFileName[256] = {};
+    for (int i = 0; i < stlfile_count; i++) {
+        memset(szSTLFileName, 0, sizeof(szSTLFileName));
+        sprintf(szSTLFileName, "%s\\%d.stl", szDir, i + 1);
+        ret = fwrite(szSTLFileName, sizeof(szSTLFileName), 1, p_file);
+        if (ret <= 0) {
+            fclose(p_file);
+            p_file = NULL;
+            return -1;
+        }
+
+        ((CSTLModel*)m_EntList[i])->SaveSTLFile(szSTLFileName);
+    }
+
+    fclose(p_file);
+    p_file = NULL;
+
+    return 0;
+}
+
 int CPart::ExportSTLFile(LPCTSTR file)
 {
+    CSTLModel* p_stlmodel = NULL;
+    char szFilePath[256] = {0};
+
     if (IsEmpty())
         return -1;
 
-    if (!m_StlModelSelected)
+    if (GetSelectedObjectCount() != 1)
         return -1;
 
-    ASSERT(m_StlModelSelected);
+    w2c(file, szFilePath);
 
-    return m_StlModelSelected->SaveSTLFile(file) ? 0 : -1;
+    p_stlmodel = (CSTLModel*)GetSelectedObject();
+    ASSERT(p_stlmodel);
+
+    return p_stlmodel->SaveSTLFile(szFilePath);
 }
 
-//attrib accessing
-BOOL CPart::IsEmpty()
+/*-----------------------------------------------------------------------------
+Function: remove selected objects
+Params: 
+Return: 0  -- modified
+        -1 -- not modified
+-----------------------------------------------------------------------------*/
+int CPart::RemoveSelectedObjects(void)
 {
-    return m_EntList.GetSize() == 0;
-}
+    CEntity* entity = NULL;
+    if (IsEmpty())
+        return -1;
 
-void CPart::SetHighLightStat(BOOL bHighLight)
-{
-    for(int i=0;i<m_EntList.GetSize();i++)
-        ((CSTLModel*)m_EntList[i])->SetHighLight(bHighLight);
-}
+    if (!HasHighLightObject())
+        return -1;
 
-void CPart::SetSelectModel(CSTLModel* model)
-{
-    m_StlModelSelected = model;
-}
+    while (entity = GetSelectedObject())
+        ASSERT(RemoveEntity(entity) == 0);
 
-BOOL CPart::GetSelectedBox(double& x0,double& y0,double& z0,double& x1,double& y1,double& z1)
-{
-    if (!m_StlModelSelected)
-        return FALSE;
+    m_bModified = TRUE;
 
-    CBox3D box;
-    if(!m_StlModelSelected->GetBox(box))
-        return FALSE;
-
-    x0 = box.x0;
-    y0 = box.y0;
-    z0 = box.z0;
-    x1 = box.x1;
-    y1 = box.y1;
-    z1 = box.z1;
-
-    return TRUE;
+    return 0;
 }
 
 /*-----------------------------------------------------------------------------
@@ -438,21 +658,38 @@ Return: 0  -- move action
 -----------------------------------------------------------------------------*/
 int CPart::MoveObject(double dx, double dy, double dz)
 {
-    if (IsEmpty())
-        return -1;
+    CSTLModel* p_stlmodel = NULL;
+    int i = 0;
+    int modify_flag = 0;
 
-    if (!m_StlModelSelected)
+    if (IsEmpty())
         return -1;
 
     if (IS_ZERO(dx) && IS_ZERO(dy) && IS_ZERO(dz))
         return -1;
 
-    if (m_StlModelSelected->MoveRelative(dx, dy, dz))
-        return -1;
+    //if no object is selected, all object will be moved
+    if (!HasHighLightObject()) {
+        //move all objects
+        for (i = 0; i < m_EntList.GetSize(); i++) {
+            p_stlmodel = (CSTLModel*)m_EntList[i];
+            if (p_stlmodel->MoveRelative(dx, dy, dz) == 0)
+                modify_flag = 1;
+        }
+    }
+    else {
+        for(i = 0; i < m_EntList.GetSize(); i++) {
+            p_stlmodel = (CSTLModel*)m_EntList[i];
+            if (p_stlmodel->IsHighLight())
+                if (p_stlmodel->MoveRelative(dx, dy, dz) == 0)
+                    modify_flag = 1;
+        }
+    }
 
-    m_bModified = TRUE;
+    if (modify_flag)
+        m_bModified = TRUE;
 
-    return 0;
+    return modify_flag ? 0 : -1;
 }
 
 /*-----------------------------------------------------------------------------
@@ -464,21 +701,48 @@ Return: 0  -- rotate action
 -----------------------------------------------------------------------------*/
 int CPart::RotateObject(VECTOR3D bv, double angle)
 {
-    if (IsEmpty())
-        return -1;
+    CSTLModel* p_stlmodel = NULL;
+    int i = 0;
+    double x0, y0, z0, x1, y1, z1;
+    CPoint3D point;
+    int modify_flag = 0;
 
-    if (!m_StlModelSelected)
+    if (IsEmpty())
         return -1;
 
     if (IS_ZERO(angle) || (IS_ZERO(bv.dx) && IS_ZERO(bv.dy) && IS_ZERO(bv.dz)))
         return -1;
 
-    if (m_StlModelSelected->Rotate(bv, angle))
+    //get refer point
+    if (!GetActiveBox(x0, y0, z0, x1, y1, z1))
         return -1;
 
-    m_bModified = TRUE;
+    point.x = (x0 + x1) / 2;
+    point.y = (y0 + y1) / 2;
+    point.z = (z0 + z1) / 2;
 
-    return 0;
+    //if no object is selected, all object will be rotated
+    if (!HasHighLightObject()) {
+        //rotate all objects
+        for (i = 0; i < m_EntList.GetSize(); i++) {
+            p_stlmodel = (CSTLModel*)m_EntList[i];
+            if (p_stlmodel->Rotate(bv, point, angle) == 0)
+                modify_flag = 1;
+        }
+    }
+    else {
+        for(i = 0; i < m_EntList.GetSize(); i++) {
+            p_stlmodel = (CSTLModel*)m_EntList[i];
+            if (p_stlmodel->IsHighLight())
+                if (p_stlmodel->Rotate(bv, point, angle) == 0)
+                    modify_flag = 1;
+        }
+    }
+
+    if (modify_flag)
+        m_bModified = TRUE;
+
+    return modify_flag ? 0 : -1;
 }
 
 /*-----------------------------------------------------------------------------
@@ -491,10 +755,13 @@ Return: 0  -- scale action
 -----------------------------------------------------------------------------*/
 int CPart::ScaleObject(double fx, double fy, double fz)
 {
-    if (IsEmpty())
-        return -1;
+    CSTLModel* p_stlmodel = NULL;
+    int i = 0;
+    double x0, y0, z0, x1, y1, z1;
+    CPoint3D point;
+    int modify_flag = 0;
 
-    if (!m_StlModelSelected)
+    if (IsEmpty())
         return -1;
 
     if (IS_ZERO(fx) || IS_ZERO(fy) || IS_ZERO(fz))
@@ -503,10 +770,122 @@ int CPart::ScaleObject(double fx, double fy, double fz)
     if (IS_ZERO(fx-1) && IS_ZERO(fy-1) && IS_ZERO(fz-1))
         return -1;
 
-    if (m_StlModelSelected->Scale(fx, fy, fz))
+    //get refer point
+    if (!GetActiveBox(x0, y0, z0, x1, y1, z1))
         return -1;
 
-    m_bModified = TRUE;
+    point.x = (x0 + x1) / 2;
+    point.y = (y0 + y1) / 2;
+    point.z = (z0 + z1) / 2;
 
-    return 0;
+    //if no object is selected, all object will be rotated
+    if (!HasHighLightObject()) {
+        //rotate all objects
+        for (i = 0; i < m_EntList.GetSize(); i++) {
+            p_stlmodel = (CSTLModel*)m_EntList[i];
+            if (p_stlmodel->Scale(point, fx, fy, fz) == 0)
+                modify_flag = 1;
+        }
+    }
+    else {
+        for(i = 0; i < m_EntList.GetSize(); i++) {
+            p_stlmodel = (CSTLModel*)m_EntList[i];
+            if (p_stlmodel->IsHighLight())
+                if (p_stlmodel->Scale(point, fx, fy, fz) == 0)
+                    modify_flag = 1;
+        }
+    }
+
+    if (modify_flag)
+        m_bModified = TRUE;
+
+    return modify_flag ? 0 : -1;
+}
+
+void CPart::SetHighLightStat(BOOL bHighLight)
+{
+    for(int i=0;i<m_EntList.GetSize();i++)
+        ((CSTLModel*)m_EntList[i])->SetHighLight(bHighLight);
+}
+
+int CPart::GetSelectedObjectCount(void)
+{
+    int count = 0;
+    if (IsEmpty())
+        return -1;
+
+    for(int i = 0; i < m_EntList.GetSize(); i++) {
+        if (((CSTLModel*)m_EntList[i])->IsHighLight())
+            count++;
+    }
+
+    return count;
+}
+
+CEntity* CPart::GetSelectedObject(void)
+{
+    for(int i = 0; i < m_EntList.GetSize(); i++) {
+        if (((CSTLModel*)m_EntList[i])->IsHighLight())
+            return m_EntList[i];
+    }
+
+    return NULL;
+}
+
+BOOL CPart::HasHighLightObject(void)
+{
+    if (IsEmpty())
+        return FALSE;
+
+    for(int i = 0; i < m_EntList.GetSize(); i++) {
+        if (((CSTLModel*)m_EntList[i])->IsHighLight())
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+/*-------------------------------------------------------------------
+Function: Get active object box.
+          The active box is the sum of all selected highlight objects.
+          If no object is selected, it is the sum of all the objects
+          in the model.
+Params: x0, y0, z0, x1, y1, z1[OUT] -- box position
+Return: 0  -- success
+        -1 -- failed
+-------------------------------------------------------------------*/
+BOOL CPart::GetActiveBox(double& x0, double& y0, double& z0,
+                        double& x1, double& y1, double& z1)
+{
+    CBox3D box;
+    CBox3D active_box;
+
+    if (IsEmpty())
+        return FALSE;
+
+    if (!HasHighLightObject())
+        GetBox(active_box);
+    else {
+        for(int i = 0; i < m_EntList.GetSize(); i++) {
+            if (((CSTLModel*)m_EntList[i])->IsHighLight() &&
+                m_EntList[i]->GetBox(box)) {
+                    if (active_box.IsEmpty())
+                        active_box = box;
+                    else
+                        active_box += box;
+            }
+        }
+    }
+
+    if (active_box.IsEmpty())
+        return FALSE;
+
+    x0 = active_box.x0;
+    y0 = active_box.y0;
+    z0 = active_box.z0;
+    x1 = active_box.x1;
+    y1 = active_box.y1;
+    z1 = active_box.z1;
+
+    return TRUE;
 }

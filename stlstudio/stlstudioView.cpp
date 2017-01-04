@@ -127,9 +127,9 @@ void CstlstudioView::Zoom_STLModel(void)
     CstlstudioDoc* pDoc = GetDocument();
     ASSERT(pDoc);
 
-    double x0,y0,z0,x1,y1,z1;
-    if (pDoc->m_Part.GetSelectedBox(x0,y0,z0,x1,y1,z1)) {
-        m_pGLDC->m_Camera.zoom_all(x0,y0,z0,x1,y1,z1);
+    double x0, y0, z0, x1, y1, z1;
+    if (pDoc->m_Part.GetActiveBox(x0, y0, z0, x1, y1, z1)) {
+        m_pGLDC->m_Camera.zoom_all(x0, y0, z0, x1, y1, z1);
         Invalidate();
     }
 }
@@ -239,18 +239,9 @@ void CstlstudioView::OnLButtonDown(UINT nFlags, CPoint point)
 
         //handle selection
         if (hits) {
-            int selectflag = 0;
             for (int i = 0; i < hits; i++) {
                 pStlModel = (CSTLModel*)items[i];
-                pStlModel->HitHandler();
-
-                if (selectflag)
-                    continue;
-
-                if (pStlModel->IsHighLight()) {
-                    pDoc->m_Part.SetSelectModel(pStlModel);
-                    selectflag = 1;
-                }
+                pStlModel->ReverseHighLight();
             }
         }
         else

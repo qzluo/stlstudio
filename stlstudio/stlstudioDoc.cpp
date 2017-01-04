@@ -16,6 +16,7 @@
 #include "DlgRotateObject.h"
 #include "DlgScaleObject.h"
 
+
 #include <propkey.h>
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -32,6 +33,9 @@ BEGIN_MESSAGE_MAP(CstlstudioDoc, CDocument)
     ON_COMMAND(ID_EDIT_MOVEOBJECT, &CstlstudioDoc::OnEditMoveobject)
     ON_COMMAND(ID_EDIT_ROTATEOBJECT, &CstlstudioDoc::OnEditRotateobject)
     ON_COMMAND(ID_EDIT_SCALEOBJECT, &CstlstudioDoc::OnEditScaleobject)
+    ON_COMMAND(ID_FILE_OPENSTL_PART, &CstlstudioDoc::OnFileOpenstlPart)
+    ON_COMMAND(ID_FILE_SAVESTL_PART, &CstlstudioDoc::OnFileSavestlPart)
+    ON_COMMAND(ID_FILE_REMOVESTLPART, &CstlstudioDoc::OnFileRemovestlpart)
 END_MESSAGE_MAP()
 
 
@@ -156,34 +160,18 @@ void CstlstudioDoc::OnFileNew()
 void CstlstudioDoc::OnFileOpen()
 {
     // TODO: Add your command handler code here
-    CFileDialog dlg(TRUE,_T("stl"),NULL,
+    CFileDialog dlg(TRUE,_T("mdl"),NULL,
         OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        _T("Stereo Lithograpic File(*.stl)|*.stl"), NULL );
+        _T("Model File(*.mdl)|*.mdl||"), NULL );
 
-    if(dlg.DoModal()==IDOK){
-
-        CSTLModel* pSTLModel = new CSTLModel();
-        if (!pSTLModel)
-            return;
-
+    if (dlg.DoModal()==IDOK) {
         CString strName = dlg.GetPathName();
-        pSTLModel->LoadSTLFile(strName);
+        m_Part.LoadModel(strName);
 
-        if(pSTLModel->IsEmpty())
-            delete pSTLModel;
-        else {
-            m_Part.AddEntity(pSTLModel);
-
-            //set the model as selected model
-            m_Part.SetHighLightStat(FALSE);
-            pSTLModel->SetHighLight(TRUE);
-            m_Part.SetSelectModel(pSTLModel);
-
-            //show all the stlmodel in the window
-            CstlstudioView* p_view = (CstlstudioView*)GetView(RUNTIME_CLASS(CstlstudioView));
-            if (p_view)
-                p_view->Zoom_STLModel();
-        }
+        //show all the stlmodel in the window
+        CstlstudioView* p_view = (CstlstudioView*)GetView(RUNTIME_CLASS(CstlstudioView));
+        if (p_view)
+            p_view->OnViewZoomall();
 
         UpdateAllViews(NULL);
     }
@@ -195,15 +183,15 @@ void CstlstudioDoc::OnFileSave()
     if (m_Part.IsEmpty())
         return;
 
-    CFileDialog dlg(FALSE, _T("stl"), _T("default.stl"),
+    CFileDialog dlg(FALSE, _T("mdl"), _T("default.mdl"),
         OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
-        _T("Stereo Lithograpic File(*.stl)|*.stl"), NULL );
+        _T("Model File(*.mdl)|*.mdl||"), NULL );
 
     CString filePath;
 
-    if(dlg.DoModal()==IDOK){
+    if(dlg.DoModal()==IDOK) {
         filePath = dlg.GetPathName();
-        m_Part.ExportSTLFile(filePath);
+        m_Part.ExportModel(filePath);
     }
 }
 
@@ -227,7 +215,7 @@ void CstlstudioDoc::OnEditMoveobject()
 
     //get positon
     double x0,y0,z0,x1,y1,z1;
-    if (!m_Part.GetSelectedBox(x0,y0,z0,x1,y1,z1))
+    if (!m_Part.GetActiveBox(x0,y0,z0,x1,y1,z1))
         return ;
 
     CDlgMoveObject dlg;
@@ -279,6 +267,71 @@ void CstlstudioDoc::OnEditScaleobject()
 
     if (IDOK == dlg.DoModal()) {
         if (m_Part.ScaleObject(params.fx, params.fy, params.fz) == 0)
+            UpdateAllViews(NULL);
+    }
+}
+
+void CstlstudioDoc::OnFileOpenstlPart()
+{
+    // TODO: Add your command handler code here
+    CFileDialog dlg(TRUE,_T("stl"), NULL,
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        _T("Stereo Lithograpic File(*.stl)|*.stl||"), NULL);
+
+    if(dlg.DoModal()==IDOK){
+        CString strName = dlg.GetPathName();
+
+        if (m_Part.LoadSTLFile(strName) == 0) {
+            CstlstudioView* p_view = (CstlstudioView*)GetView(RUNTIME_CLASS(CstlstudioView));
+            if (p_view)
+                p_view->Zoom_STLModel();
+            UpdateAllViews(NULL);
+        }
+    }
+}
+
+void CstlstudioDoc::OnFileSavestlPart()
+{
+    // TODO: Add your command handler code here
+    if (m_Part.IsEmpty())
+        return;
+
+    if (m_Part.GetSelectedObjectCount() != 1) {
+        MessageBox(NULL, _T("To export stl part, one part and only one should be selected."),
+            _T("Export STL"), MB_OK );
+        return;
+    }
+
+    CFileDialog dlg(FALSE, _T("stl"), _T("default.stl"),
+        OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,
+        _T("Stereo Lithograpic File(*.stl)|*.stl||"), NULL );
+
+    CString filePath;
+
+    if(dlg.DoModal()==IDOK) {
+        filePath = dlg.GetPathName();
+        m_Part.ExportSTLFile(filePath);
+    }
+}
+
+void CstlstudioDoc::OnFileRemovestlpart()
+{
+    // TODO: Add your command handler code here
+    int count = m_Part.GetSelectedObjectCount();
+    if (count < 1)
+        return;
+
+    ASSERT(count >= 1);
+
+    CString strMsg;
+    strMsg = count == 1 ? 
+        _T("Are you sure to remove the selected object?") :
+        _T("Are you sure to remove the selected objects?");
+
+    int ret = MessageBox(NULL, strMsg, _T("Remove Objects"), MB_YESNO);
+
+    if (ret == IDYES) {
+        if (m_Part.RemoveSelectedObjects() == 0)
             UpdateAllViews(NULL);
     }
 }

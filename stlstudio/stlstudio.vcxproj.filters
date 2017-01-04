@@ -96,6 +96,9 @@
     <ClInclude Include="DlgScaleObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="public.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stlstudio.cpp">
@@ -135,6 +138,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DlgScaleObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="public.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

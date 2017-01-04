@@ -4,6 +4,8 @@
 #include "GeomCalc\cadbase.h"
 #include "OpenGLDC.h"
 
+#define MODEL_FILE_HEAD  "WXLSTLMODEL"
+
 
 class CEntity : public CObject  
 {
@@ -71,18 +73,20 @@ public:
     //display
     void Draw(COpenGLDC* pDC);
 
-    BOOL LoadSTLFile(LPCTSTR file);
-    BOOL SaveSTLFile(LPCTSTR file);
-
-    void HitHandler(void);
-
-    BOOL IsHighLight(void) { return m_bHighLight;}
-    void SetHighLight(BOOL bHighLihgt) { m_bHighLight = bHighLihgt; }
+    int LoadSTLFile(const char* filename);
+    int SaveSTLFile(const char* filename);
 
     //operate object
     int MoveRelative(double dx, double dy, double dz);
-    int Rotate(VECTOR3D bv, double angle);
-    int Scale(double fx, double fy, double fz);
+    int RotateAroundCenter(VECTOR3D bv, double angle);
+    int Rotate(VECTOR3D bv, CPoint3D ref_pt, double angle);
+    int ScaleAroundCenter(double fx, double fy, double fz);
+    int Scale(CPoint3D ref_pt, double fx, double fy, double fz);
+
+    //for select operation
+    void ReverseHighLight(void);
+    BOOL IsHighLight(void) { return m_bHighLight;}
+    void SetHighLight(BOOL bHighLihgt) { m_bHighLight = bHighLihgt; }
 
 protected:
     virtual void UpdateBox();
@@ -94,7 +98,6 @@ class CPart : public CEntity
 {
     //attribs
 protected:
-    CSTLModel* m_StlModelSelected;    //for export object
     CTypedPtrArray<CObArray,CEntity*> m_EntList;
 
 public:
@@ -108,23 +111,29 @@ public:
     //operation
     void AddEntity(CEntity* ent);
     void RemoveAllEntity();
-
-    int ExportSTLFile(LPCTSTR file);
+    int RemoveEntity(CEntity* ent);
 
     //attrib accessing
     BOOL IsEmpty();
 
-    void SetHighLightStat(BOOL bHighLight);
-
-    //select object
-    void SetSelectModel(CSTLModel* model);
-    CSTLModel* GetSelectModel(void) {return m_StlModelSelected;}
-    BOOL GetSelectedBox(double& x0,double& y0,double& z0,double& x1,double& y1,double& z1);
+    //import and export
+    int LoadModel(LPCTSTR file);
+    int LoadSTLFile(LPCTSTR file);
+    int ExportModel(LPCTSTR file);
+    int ExportSTLFile(LPCTSTR file);
+    int RemoveSelectedObjects(void);
 
     //operate object
     int MoveObject(double dx, double dy, double dz);
     int RotateObject(VECTOR3D bv, double angle);
     int ScaleObject(double fx, double fy, double fz);
+
+    //select object
+    int GetSelectedObjectCount(void);
+    CEntity* GetSelectedObject(void);
+    BOOL HasHighLightObject(void);
+    BOOL GetActiveBox(double& x0,double& y0,double& z0,double& x1,double& y1,double& z1);
+    void SetHighLightStat(BOOL bHighLight);
 
 protected:
     virtual void UpdateBox();

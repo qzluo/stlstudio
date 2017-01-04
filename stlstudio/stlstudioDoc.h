@@ -56,4 +56,7 @@ public:
     afx_msg void OnEditMoveobject();
     afx_msg void OnEditRotateobject();
     afx_msg void OnEditScaleobject();
+    afx_msg void OnFileOpenstlPart();
+    afx_msg void OnFileSavestlPart();
+    afx_msg void OnFileRemovestlpart();
 };
