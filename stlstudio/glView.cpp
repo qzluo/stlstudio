@@ -43,7 +43,7 @@ BOOL CGLView::PreCreateWindow(CREATESTRUCT& cs)
     return CView::PreCreateWindow(cs);
 }
 
-int CGLView::OnCreate(LPCREATESTRUCT lpCreateStruct) 
+int CGLView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
     if (CView::OnCreate(lpCreateStruct) == -1)
         return -1;

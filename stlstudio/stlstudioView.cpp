@@ -17,7 +17,6 @@
 
 #include "Entity.h"
 
-#include "test.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -47,12 +46,17 @@ BEGIN_MESSAGE_MAP(CstlstudioView, CGLView)
     ON_WM_LBUTTONDOWN()
     ON_COMMAND(ID_EDIT_SELECTALL, &CstlstudioView::OnEditSelectall)
     ON_COMMAND(ID_EDIT_SELECTNONE, &CstlstudioView::OnEditSelectnone)
+    ON_WM_LBUTTONUP()
+    ON_COMMAND(ID_VIEW_SHOWWORKSTATION, &CstlstudioView::OnViewShowworkstation)
+    ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWWORKSTATION, &CstlstudioView::OnUpdateViewShowworkstation)
+    ON_COMMAND(ID_VIEW_ZOOMWORKSTATION, &CstlstudioView::OnViewZoomworkstation)
 END_MESSAGE_MAP()
 
 // CstlstudioView construction/destruction
 
 CstlstudioView::CstlstudioView()
 {
+    m_bIsShowWorkStation = FALSE;
 }
 
 CstlstudioView::~CstlstudioView()
@@ -90,17 +94,24 @@ int CstlstudioView::OnCreate(LPCREATESTRUCT lpCreateStruct)
     if (CGLView::OnCreate(lpCreateStruct) == -1)
         return -1;
 
-    setDragMove(TRUE);
+    setDragMove(FALSE);
 
     return 0;
 }
 
 void CstlstudioView::RenderScene(COpenGLDC* pDC)
 {
+    pDC->DrawCoord();
+    if (m_bIsShowWorkStation)
+        pDC->DrawWorkStation();
+    DrawParts(pDC);
+}
+
+void CstlstudioView::DrawParts(COpenGLDC* pDC)
+{
     CstlstudioDoc* pDoc = GetDocument();
     ASSERT(pDoc);
 
-    pDC->DrawCoord();
     if(!pDoc->m_Part.IsEmpty())
         pDoc->m_Part.Draw(pDC);
 }
@@ -227,12 +238,14 @@ void CstlstudioView::OnLButtonDown(UINT nFlags, CPoint point)
     CstlstudioDoc* pDoc = GetDocument();
     ASSERT(pDoc);
 
-    if(m_pGLDC){
+    setDragMove(TRUE);
+
+    if(m_pGLDC) {
         //begin selection
         m_pGLDC->BeginSelection(point.x, point.y);
 
         //render
-        RenderScene(m_pGLDC);
+        DrawParts(m_pGLDC);
 
         //end selection
         hits = m_pGLDC->EndSelection(items);
@@ -273,6 +286,37 @@ void CstlstudioView::OnEditSelectnone()
 
     if(!pDoc->m_Part.IsEmpty()) {
         pDoc->m_Part.SetHighLightStat(FALSE);
+        Invalidate();
+    }
+}
+
+void CstlstudioView::OnLButtonUp(UINT nFlags, CPoint point)
+{
+    // TODO: Add your message handler code here and/or call default
+    setDragMove(FALSE);
+
+    CGLView::OnLButtonUp(nFlags, point);
+}
+
+void CstlstudioView::OnViewShowworkstation()
+{
+    // TODO: Add your command handler code here
+    m_bIsShowWorkStation = !m_bIsShowWorkStation;
+    Invalidate();
+}
+
+void CstlstudioView::OnUpdateViewShowworkstation(CCmdUI *pCmdUI)
+{
+    // TODO: Add your command update UI handler code here
+    pCmdUI->SetCheck(m_bIsShowWorkStation);
+}
+
+
+void CstlstudioView::OnViewZoomworkstation()
+{
+    // TODO: Add your command handler code here
+    if(m_pGLDC) {
+        m_pGLDC->ZoomWorkStation();
         Invalidate();
     }
 }

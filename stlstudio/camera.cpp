@@ -20,8 +20,8 @@ void GCamera::init()
 
     m_far  = 20000;
     m_near = 1;
-    m_width  = 2400.0;
-    m_height = 2400.0;
+    m_width  = 400.0;
+    m_height = 400.0;
 
     m_screen[0] = 400;
     m_screen[1] = 400;

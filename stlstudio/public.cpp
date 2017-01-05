@@ -55,4 +55,4 @@ int DeleteDir(LPCWSTR lpszPath)
     FileOp.pTo = NULL;
     FileOp.wFunc = FO_DELETE;
     return SHFileOperation(&FileOp);
-} 
+}

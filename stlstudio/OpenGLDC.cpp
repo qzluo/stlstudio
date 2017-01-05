@@ -15,6 +15,11 @@ COpenGLDC::COpenGLDC(HWND hWnd):m_hWnd(hWnd)
     m_coord_gap = 100;
     m_axis_len = 100;
     m_axis_linewidth = 3;
+
+    m_ws_length = 400;
+    m_ws_width = 400;
+    m_ws_height = 300;
+    m_ws_gap = 10;
 }
 
 COpenGLDC::~COpenGLDC()
@@ -65,6 +70,36 @@ BOOL COpenGLDC::InitDC()
     wglMakeCurrent(NULL,NULL);
 
     return m_hRC != 0;
+}
+
+void COpenGLDC::GLSetupRC()
+{
+    GLfloat lightAmbient[] = {0.75, 0.75, 0.75, 1};
+    GLfloat lightDiffuse[] = {1, 1, 1, 1};
+    GLfloat lightPos[] = {1, 1, 1, 0};
+
+    glClearColor(0.75, 0.75, 0.75, 0.0f);
+    glEnable(GL_DEPTH_TEST);		//Hidden surface removal
+    glEnable(GL_CULL_FACE);			//calculate inside of object to support two side of surfaces
+    glFrontFace(GL_CCW);
+
+    //set light0 property
+    glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+
+    //enable light0
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+
+    //set material
+    //SetMaterialColor(RGB(225,175,22));
+    SetMaterialColor(RGB(64,64,64));
+
+    //frame color
+    SetColor(RGB(255, 255, 255));
+
+    m_bShading = TRUE;
 }
 
 void COpenGLDC::GLResize(int w,int h)
@@ -149,36 +184,6 @@ void COpenGLDC::Shading(BOOL bShading)
 BOOL COpenGLDC::IsShading()
 {
     return m_bShading;
-}
-
-void COpenGLDC::GLSetupRC()
-{
-    GLfloat lightAmbient[] = {0.75, 0.75, 0.75, 1};
-    GLfloat lightDiffuse[] = {1, 1, 1, 1};
-    GLfloat lightPos[] = {1, 1, 1, 0};
-
-    glClearColor(0.75, 0.75, 0.75, 0.0f);
-    glEnable(GL_DEPTH_TEST);		//Hidden surface removal
-    glEnable(GL_CULL_FACE);			//calculate inside of object to support two side of surfaces
-    glFrontFace(GL_CCW);
-
-    //set light0 property
-    glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmbient);
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
-    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-
-    //enable light0
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-
-    //set material
-    //SetMaterialColor(RGB(225,175,22));
-    SetMaterialColor(RGB(64,64,64));
-
-    //frame color
-    SetColor(RGB(255, 255, 255));
-
-    m_bShading = TRUE;
 }
 
 void COpenGLDC::SetColor(COLORREF clr)
@@ -317,11 +322,154 @@ void COpenGLDC::DrawCoord()
         Lighting(bLighting);
 }
 
+void COpenGLDC::DrawWorkStation(void)
+{
+    //get old setting
+    int polymode = 0;
+    BOOL bLighting = FALSE;
+    bLighting = IsLighting();
+    if (bLighting)
+        Lighting(FALSE);
+
+    COLORREF old_clr;
+    GetColor(old_clr);
+    glLineWidth(2);
+    polymode = GetPolyMode();
+
+    //draw frame
+    DrawWSFrame();
+
+    //draw down pane grid
+    DrawWSPaneGrid();
+
+    //recover old setting
+    SetPolyMode(polymode);
+    glLineWidth(1);
+    SetColor(old_clr);
+    if (bLighting)
+        Lighting(bLighting);
+}
+
+void COpenGLDC::DrawWSFrame(void)
+{
+    SetColor(RGB(0,0,0));
+    GLfloat point_a[3] = {0, 0, 0};
+    GLfloat point_b[3] = {m_ws_length, 0, 0};
+    GLfloat point_c[3] = {m_ws_length, 0, m_ws_height};
+    GLfloat point_d[3] = {0, 0, m_ws_height};
+
+    GLfloat point_e[3] = {m_ws_length, m_ws_width, 0};
+    GLfloat point_f[3] = {m_ws_length, m_ws_width, m_ws_height};
+    GLfloat point_g[3] = {0, m_ws_width, m_ws_height};
+    GLfloat point_h[3] = {0, m_ws_width, 0};
+
+    glBegin(GL_LINE_LOOP);
+    glVertex3fv(point_a);
+    glVertex3fv(point_b);
+    glVertex3fv(point_c);
+    glVertex3fv(point_d);
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+    glVertex3fv(point_b);
+    glVertex3fv(point_e);
+    glVertex3fv(point_f);
+    glVertex3fv(point_c);
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+    glVertex3fv(point_e);
+    glVertex3fv(point_h);
+    glVertex3fv(point_g);
+    glVertex3fv(point_h);
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+    glVertex3fv(point_h);
+    glVertex3fv(point_a);
+    glVertex3fv(point_d);
+    glVertex3fv(point_g);
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+    glVertex3fv(point_a);
+    glVertex3fv(point_h);
+    glVertex3fv(point_e);
+    glVertex3fv(point_b);
+    glEnd();
+
+    glBegin(GL_LINE_LOOP);
+    glVertex3fv(point_c);
+    glVertex3fv(point_f);
+    glVertex3fv(point_g);
+    glVertex3fv(point_d);
+    glEnd();
+
+    //draw bottom pane
+    SetColor(RGB(0xAD, 0xD8, 0xE6));
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBegin(GL_QUADS);
+    glVertex3fv(point_a);
+    glVertex3fv(point_b);
+    glVertex3fv(point_e);
+    glVertex3fv(point_h);
+    glEnd();
+}
+
+void COpenGLDC::DrawWSPaneGrid(void)
+{
+    double pos = m_ws_gap;
+
+    SetColor(RGB(0x99, 0x99, 0x66));
+    while (pos < m_ws_width) {
+        glBegin(GL_LINES);
+        glVertex3f(0, pos, 0.001);
+        glVertex3f(m_ws_length, pos, 0.001);
+        glEnd();
+        pos += m_ws_gap;
+    }
+
+    pos = m_ws_gap;
+    while (pos < m_ws_length) {
+        glBegin(GL_LINES);
+        glVertex3f(pos, 0, 0.001);
+        glVertex3f(pos, m_ws_width, 0.001);
+        glEnd();
+        pos += m_ws_gap;
+    }
+}
+
+void COpenGLDC::ZoomWorkStation(void)
+{
+    double factor = 0.5;
+    double x0, y0, z0, x1, y1, z1;
+    x0 = - m_ws_length * factor / 2;
+    y0 = - m_ws_width * factor / 2;
+    z0 = - m_ws_height * factor / 2;
+    x1 = m_ws_length + m_ws_length * factor / 2;
+    y1 = m_ws_width + m_ws_width * factor / 2;
+    z1 = m_ws_height + m_ws_height * factor / 2;
+
+    m_Camera.zoom_all(x0, y0, z0, x1, y1, z1);
+}
+
+int COpenGLDC::GetPolyMode(void)
+{
+    glGetIntegerv(GL_POLYGON_MODE, &m_polymode);
+    return m_polymode;
+}
+
+void COpenGLDC::SetPolyMode(int polymode)
+{
+    m_polymode = polymode;
+    glPolygonMode(GL_FRONT_AND_BACK, m_polymode);
+}
+
 void COpenGLDC::DrawLine(const CPoint3D& sp,const CPoint3D& ep)
 {
     glBegin(GL_LINES);
-    glVertex3f(sp.x,sp.y,sp.z);
-    glVertex3f(ep.x,ep.y,ep.z);
+    glVertex3f(sp.x, sp.y, sp.z);
+    glVertex3f(ep.x, ep.y, ep.z);
     glEnd();
 }
 

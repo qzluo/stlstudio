@@ -8,6 +8,9 @@
 
 class CstlstudioView : public CGLView
 {
+private:
+    BOOL m_bIsShowWorkStation;
+
 protected: // create from serialization only
     CstlstudioView();
     DECLARE_DYNCREATE(CstlstudioView)
@@ -23,6 +26,8 @@ public:
 protected:
     virtual void RenderScene(COpenGLDC* pDC);
     virtual BOOL GetBox(double& x0,double& y0,double& z0,double& x1,double& y1,double& z1);
+
+    void DrawParts(COpenGLDC* pDC);
 
 #ifdef _DEBUG
     virtual void AssertValid() const;
@@ -51,6 +56,10 @@ public:
     afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
     afx_msg void OnEditSelectall();
     afx_msg void OnEditSelectnone();
+    afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+    afx_msg void OnViewShowworkstation();
+    afx_msg void OnUpdateViewShowworkstation(CCmdUI *pCmdUI);
+    afx_msg void OnViewZoomworkstation();
 };
 
 #ifndef _DEBUG  // debug version in stlstudioView.cpp

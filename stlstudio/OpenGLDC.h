@@ -9,6 +9,9 @@
 #define BG_COLOR_ONE   RGB(128, 128, 128)
 #define BG_COLOR_TWO   RGB(255, 255, 255)
 
+#define WS_COLOR_BOTTOM   RGB(0xAD, 0xD8, 0xE6)
+#define WS_COLOR_GRID     RGB(0x99, 0x99, 0x66)
+
 class COpenGLDC
 {
 public:
@@ -28,10 +31,19 @@ private:
     BOOL        m_bSelectionMode;
     GLuint      m_selectBuff[BUFFER_LENGTH];
 
+    //polymode
+    GLint       m_polymode;
+
     //to draw coordinate axis
     double m_coord_gap;
     double m_axis_len;
     double m_axis_linewidth;
+
+    //to draw work station
+    double m_ws_length;
+    double m_ws_width;
+    double m_ws_height;
+    double m_ws_gap;
 
 public:
     GCamera     m_Camera;
@@ -65,6 +77,9 @@ public:
 
 /////////////////// Drawing ////////////////////
     void DrawCoord();
+    void DrawWorkStation(void);
+    void ZoomWorkStation(void);
+
     void DrawLine(const CPoint3D& sp,const CPoint3D& ep);
 
     //drawing surface
@@ -78,6 +93,13 @@ private:
 
     void Lighting(BOOL bLighting);
     BOOL IsLighting();
+
+    //to draw a work station frame
+    void DrawWSFrame(void);
+    void DrawWSPaneGrid(void);
+
+    int GetPolyMode(void);
+    void SetPolyMode(int polymode);
 };
 
 #endif  //__OPENGLDC_H__
