@@ -418,10 +418,10 @@ void COpenGLDC::DrawWSFrame(void)
 
 void COpenGLDC::DrawWSPaneGrid(void)
 {
-    double pos = m_ws_gap;
+    double pos = 0;
 
     SetColor(RGB(0x99, 0x99, 0x66));
-    while (pos < m_ws_width) {
+    while (pos <= m_ws_width) {
         glBegin(GL_LINES);
         glVertex3f(0, pos, 0.001);
         glVertex3f(m_ws_length, pos, 0.001);
@@ -429,8 +429,8 @@ void COpenGLDC::DrawWSPaneGrid(void)
         pos += m_ws_gap;
     }
 
-    pos = m_ws_gap;
-    while (pos < m_ws_length) {
+    pos = 0;
+    while (pos <= m_ws_length) {
         glBegin(GL_LINES);
         glVertex3f(pos, 0, 0.001);
         glVertex3f(pos, m_ws_width, 0.001);

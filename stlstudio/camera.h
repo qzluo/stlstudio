@@ -40,6 +40,9 @@ private:
     CPoint3D	m_leftup;
     CPoint3D	m_rightup;
 
+    //rotate factor, move this length will rotate 360
+    double m_rotatefactor;
+
 public:
     GCamera();
     ~GCamera();
@@ -83,6 +86,8 @@ public:
     void turnRight(double angle=5.0);
     void turnUp(double angle=5.0);
     void turnDown(double angle=5.0);
+
+    void turn_by_space(double dx, double dy);
 
 private:
     void update_upVec();

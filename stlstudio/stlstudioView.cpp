@@ -46,7 +46,6 @@ BEGIN_MESSAGE_MAP(CstlstudioView, CGLView)
     ON_WM_LBUTTONDOWN()
     ON_COMMAND(ID_EDIT_SELECTALL, &CstlstudioView::OnEditSelectall)
     ON_COMMAND(ID_EDIT_SELECTNONE, &CstlstudioView::OnEditSelectnone)
-    ON_WM_LBUTTONUP()
     ON_COMMAND(ID_VIEW_SHOWWORKSTATION, &CstlstudioView::OnViewShowworkstation)
     ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWWORKSTATION, &CstlstudioView::OnUpdateViewShowworkstation)
     ON_COMMAND(ID_VIEW_ZOOMWORKSTATION, &CstlstudioView::OnViewZoomworkstation)
@@ -94,7 +93,7 @@ int CstlstudioView::OnCreate(LPCREATESTRUCT lpCreateStruct)
     if (CGLView::OnCreate(lpCreateStruct) == -1)
         return -1;
 
-    setDragMove(FALSE);
+    setDragMove(TRUE);
 
     return 0;
 }
@@ -238,8 +237,6 @@ void CstlstudioView::OnLButtonDown(UINT nFlags, CPoint point)
     CstlstudioDoc* pDoc = GetDocument();
     ASSERT(pDoc);
 
-    setDragMove(TRUE);
-
     if(m_pGLDC) {
         //begin selection
         m_pGLDC->BeginSelection(point.x, point.y);
@@ -251,16 +248,49 @@ void CstlstudioView::OnLButtonDown(UINT nFlags, CPoint point)
         hits = m_pGLDC->EndSelection(items);
 
         //handle selection
-        if (hits) {
-            for (int i = 0; i < hits; i++) {
-                pStlModel = (CSTLModel*)items[i];
-                pStlModel->ReverseHighLight();
+        /*
+        If ctrl is entered at the same time, new hit items will be selected
+        and old hitted items would stay old state.
+        If ctrl is not entered at the same time, the items which are not hitted
+        would be set not selected state. The items which are hitted would 
+        reverse state.
+        */
+        if (MK_CONTROL & nFlags) {
+            if (hits) {
+                for (int i = 0; i < hits; i++) {
+                    pStlModel = (CSTLModel*)items[i];
+                    pStlModel->ReverseHighLight();
+                }
+
+                Invalidate(FALSE);
             }
         }
-        else
+        else {
+            //get old status
+            BOOL* bNewStatus = NULL;
+            if (hits) {
+                ASSERT(hits > 0);
+                bNewStatus = new BOOL[hits];
+                for (int i = 0; i < hits; i++) {
+                    pStlModel = (CSTLModel*)items[i];
+                    bNewStatus[i] = !(pStlModel->IsHighLight());
+                }
+            }
+
+            //clear all status
             pDoc->m_Part.SetHighLightStat(FALSE);
 
-        Invalidate(FALSE);
+            //set new status
+            if (hits) {
+                for (int i = 0; i < hits; i++) {
+                    pStlModel = (CSTLModel*)items[i];
+                    pStlModel->SetHighLight(bNewStatus[i]);
+                }
+
+                delete bNewStatus;
+            }
+            Invalidate(FALSE);
+        }
     }
 
     CGLView::OnLButtonDown(nFlags, point);
@@ -290,14 +320,6 @@ void CstlstudioView::OnEditSelectnone()
     }
 }
 
-void CstlstudioView::OnLButtonUp(UINT nFlags, CPoint point)
-{
-    // TODO: Add your message handler code here and/or call default
-    setDragMove(FALSE);
-
-    CGLView::OnLButtonUp(nFlags, point);
-}
-
 void CstlstudioView::OnViewShowworkstation()
 {
     // TODO: Add your command handler code here
@@ -310,7 +332,6 @@ void CstlstudioView::OnUpdateViewShowworkstation(CCmdUI *pCmdUI)
     // TODO: Add your command update UI handler code here
     pCmdUI->SetCheck(m_bIsShowWorkStation);
 }
-
 
 void CstlstudioView::OnViewZoomworkstation()
 {

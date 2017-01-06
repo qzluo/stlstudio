@@ -56,7 +56,6 @@ public:
     afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
     afx_msg void OnEditSelectall();
     afx_msg void OnEditSelectnone();
-    afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
     afx_msg void OnViewShowworkstation();
     afx_msg void OnUpdateViewShowworkstation(CCmdUI *pCmdUI);
     afx_msg void OnViewZoomworkstation();

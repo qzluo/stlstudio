@@ -5,16 +5,18 @@ IMPLEMENT_DYNCREATE(CGLView, CView)
 
 BEGIN_MESSAGE_MAP(CGLView, CView)
     //{{AFX_MSG_MAP(CGLView)
-	ON_WM_CREATE()
-	ON_WM_DESTROY()
-	ON_WM_SIZE()
-	ON_WM_ERASEBKGND()
-	ON_WM_LBUTTONDOWN()
-	ON_WM_MOUSEMOVE()
-	ON_WM_KEYDOWN()
-	ON_WM_CHAR()
-	//}}AFX_MSG_MAP
-	// Standard printing commands
+    ON_WM_CREATE()
+    ON_WM_DESTROY()
+    ON_WM_SIZE()
+    ON_WM_ERASEBKGND()
+    ON_WM_MBUTTONDOWN()
+    ON_WM_RBUTTONDOWN()
+    ON_WM_MOUSEMOVE()
+    ON_WM_KEYDOWN()
+    ON_WM_CHAR()
+    ON_WM_MOUSEWHEEL()
+    //}}AFX_MSG_MAP
+    // Standard printing commands
 END_MESSAGE_MAP()
 
 
@@ -30,7 +32,7 @@ CGLView::~CGLView()
 
 void CGLView::OnDraw(CDC* pDC)
 {
-    if(m_pGLDC){
+    if (m_pGLDC) {
         m_pGLDC->Ready();
         RenderScene(m_pGLDC);
         m_pGLDC->Finish();
@@ -75,23 +77,49 @@ BOOL CGLView::OnEraseBkgnd(CDC* pDC)
     return TRUE;
 }
 
-void CGLView::OnLButtonDown(UINT nFlags, CPoint point) 
+void CGLView::OnMButtonDown(UINT nFlags, CPoint point)
 {
+    // TODO: Add your message handler code here and/or call default
     if (m_bDragMove)
         m_lastPoint = point;
 
-    CView::OnLButtonDown(nFlags, point);
+    CView::OnMButtonDown(nFlags, point);
+}
+
+
+void CGLView::OnRButtonDown(UINT nFlags, CPoint point)
+{
+    // TODO: Add your message handler code here and/or call default
+    m_lastPoint = point;
+
+    CView::OnRButtonDown(nFlags, point);
 }
 
 void CGLView::OnMouseMove(UINT nFlags, CPoint point)
 {
-    if((nFlags & MK_LBUTTON) && m_bDragMove) {
+    if((nFlags & MK_MBUTTON) && m_bDragMove) {
         m_pGLDC->m_Camera.move_screen(point.x - m_lastPoint.x, m_lastPoint.y - point.y);
+        m_lastPoint = point;
+        Invalidate();
+    }
+    else if(nFlags & MK_RBUTTON) {
+        m_pGLDC->m_Camera.turn_by_space(point.x - m_lastPoint.x, m_lastPoint.y - point.y);
         m_lastPoint = point;
         Invalidate();
     }
 
     CView::OnMouseMove(nFlags, point);
+}
+
+BOOL CGLView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
+{
+    // TODO: Add your message handler code here and/or call default
+    if (zDelta == 120)
+        Zoom(0.9);
+    else if (zDelta == -120)
+        Zoom(1.1);
+
+    return CView::OnMouseWheel(nFlags, zDelta, pt);
 }
 
 void CGLView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)

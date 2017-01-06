@@ -25,6 +25,8 @@ void GCamera::init()
 
     m_screen[0] = 400;
     m_screen[1] = 400;
+
+    m_rotatefactor = 500;
 }
 
 void GCamera::set_screen(int x, int y)
@@ -273,6 +275,37 @@ void GCamera::turnDown(double angle)
     vec = vec * mat;
     m_eye = m_ref + vec;
     m_vecUp = vec * xDir;
+    m_vecUp.Normalize();
+}
+
+/*-----------------------------------------------------------------------------
+Function: rotate view(the eye) along the direction decided by dx and dy.
+Params: dx[IN] -- move space in x direction
+        dy[IN] -- move space in y direction
+Return: none
+-----------------------------------------------------------------------------*/
+void GCamera::turn_by_space(double dx, double dy)
+{
+    //calculate move direction
+    CVector3D xDir = (m_ref - m_eye) * m_vecUp;
+    xDir.Normalize();
+    CVector3D moveDir = (xDir * dx + m_vecUp * dy);
+
+    //calculate rotate axis direction
+    CVector3D axisDir = (m_ref - m_eye) * moveDir;
+    axisDir.Normalize();
+
+    //calculate rotate matrix
+    double angle = 2 * PI * sqrt(dx*dx + dy*dy) / m_rotatefactor;
+    CMatrix3D mat = CMatrix3D::CreateRotateMatrix(angle, axisDir);
+
+    //rotate eye and calculate new eye
+    CVector3D vec = m_eye - m_ref;
+    vec = vec * mat;
+    m_eye = m_ref + vec;
+
+    //rotate up direction and update
+    m_vecUp = m_vecUp * mat;
     m_vecUp.Normalize();
 }
 
