@@ -19,7 +19,8 @@ public:
     CPart	m_Part;
 
 // Operations
-public:
+private:
+    void ExportStlFile(int format=0);
 
 // Overrides
 public:
@@ -59,4 +60,8 @@ public:
     afx_msg void OnFileOpenstlPart();
     afx_msg void OnFileSavestlPart();
     afx_msg void OnFileRemovestlpart();
+    afx_msg void OnUnitconversionMmtoinch();
+    afx_msg void OnUnitconversionInchtomm();
+    afx_msg void OnEditAlignobject();
+    afx_msg void OnExportstlpartAsstl();
 };

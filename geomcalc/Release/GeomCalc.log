@@ -1,0 +1,29 @@
+﻿Build started 2017/1/7 15:58:29.
+     1>Project "D:\code\work\software\wxlstlstudio\geomcalc\GeomCalc.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating ".\Release\GeomCalc.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+       ResourceCompile:
+         All outputs are up-to-date.
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\Microsoft.CppBuild.targets(990,5): warning MSB8012: TargetPath(D:\code\work\software\wxlstlstudio\geomcalc\.\Release\GeomCalc.dll) does not match the Linker's OutputFile property value (D:\code\work\software\wxlstlstudio\bin\rel\GeomCalc.dll). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\bin\rel\GeomCalc.dll" /INCREMENTAL:NO /NOLOGO /DEF:".\GeomCalc.def" /MANIFEST /ManifestFile:".\Release\GeomCalc.dll.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /PDB:".\Release/GeomCalc.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\lib\rel\GeomCalc.lib" /MACHINE:X86 /DLL .\Release\GeomCalc.res
+         .\Release/CadBase.obj
+         .\Release/cadbase1.obj
+         .\Release/GeomCalc.obj
+         .\Release/StdAfx.obj
+     1>.\GeomCalc.def(4): warning LNK4017: DESCRIPTION statement not supported for the target platform; ignored
+            Creating library ..\lib\rel\GeomCalc.lib and object ..\lib\rel\GeomCalc.exp
+         GeomCalc.vcxproj -> D:\code\work\software\wxlstlstudio\geomcalc\.\Release\GeomCalc.dll
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"..\bin\rel\GeomCalc.dll;#2" /manifest .\Release\GeomCalc.dll.intermediate.manifest "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\Include\Manifest\dpiaware.manifest"
+       FinalizeBuildStatus:
+         Deleting file ".\Release\GeomCalc.unsuccessfulbuild".
+         Touching ".\Release\GeomCalc.lastbuildstate".
+     1>Done Building Project "D:\code\work\software\wxlstlstudio\geomcalc\GeomCalc.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.70

@@ -7,7 +7,7 @@ CEntity::CEntity()
 {
     m_bModified = FALSE;
     m_pBox = NULL;
-    m_clrEntity = RGB(64, 64, 64);
+    m_clrEntity = RGB(30, 30, 30);
 }
 
 CEntity::~CEntity()
@@ -162,6 +162,30 @@ void CSTLModel::UpdateBox()
 //load with STL File
 int CSTLModel::LoadSTLFile(const char* filename)
 {
+    if (LoadBinSTLFile(filename) == 0)
+        return 0;
+
+    return LoadASCSTLFile(filename);
+}
+
+//format: 0 -- binary, 1 -- ascii
+int CSTLModel::SaveSTLFile(const char* filename, int format)
+{
+    if (format < STL_FILE_FORMAT_BIN ||
+        format > STL_FILE_FORMAT_ASCII)
+        return -1;
+
+    if (format == STL_FILE_FORMAT_BIN)
+        return SaveBinSTLFile(filename);
+    else if (format == STL_FILE_FORMAT_ASCII)
+        return SaveSTLFile(filename);
+
+    return -1;
+}
+
+//load with ascii STL File
+int CSTLModel::LoadASCSTLFile(const char* filename)
+{
     FILE* p_file = NULL;
     p_file = fopen(filename, "rb");
     if (!p_file)
@@ -169,6 +193,15 @@ int CSTLModel::LoadSTLFile(const char* filename)
 
     char str[80];
     CTriChip* tri = NULL;
+
+    //check the head
+    if ((fscanf_s(p_file, "%s", str, 80) <= 0) ||
+        strncmp(str, "solid", strlen("solid"))) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
     while(fscanf_s(p_file, "%s", str, 80) == 1) {
         if(strncmp(str, "normal", 6) == 0) {
             tri = new CTriChip();
@@ -185,6 +218,9 @@ int CSTLModel::LoadSTLFile(const char* filename)
     }
 
     m_bModified = TRUE;
+
+    fclose(p_file);
+    p_file = NULL;
 
     return 0;
 }
@@ -219,6 +255,141 @@ int CSTLModel::SaveSTLFile(const char* filename)
 }
 
 /*-----------------------------------------------------------------------------
+Function: Load the binary stl file.
+Params: filename[IN] -- file name
+Return: 0  -- modified
+        -1 -- not modified
+-----------------------------------------------------------------------------*/
+int CSTLModel::LoadBinSTLFile(const char* filename)
+{
+    FILE* p_file = NULL;
+    long filelen = 0L;
+    int trichip_len = 0;
+    char buf[50] = {0};
+    char* pos = NULL;
+    int ret = 0;
+    CTriChip* tri = NULL;
+
+    p_file = fopen(filename, "rb");
+    if (!p_file)
+        return -1;
+
+    //check the file length
+    fseek(p_file, 0, 2);
+    filelen = ftell(p_file);
+    if (filelen <= 84) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    //read trichip len
+    fseek(p_file, 80, 0);
+    ret = fread(&trichip_len, sizeof(trichip_len), 1, p_file);
+    if (ret <= 0) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    if (trichip_len * 50 + 84 != filelen) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    while (fread(&buf, sizeof(buf), 1, p_file)) {
+        tri = new CTriChip();
+        if (!tri)
+            continue;
+
+        pos = buf;
+
+        tri->normal.dx = *((float*)pos); pos += 4;
+        tri->normal.dy = *((float*)pos); pos += 4;
+        tri->normal.dz = *((float*)pos); pos += 4;
+
+        for (int i = 0; i < 3; i++) {
+            tri->vex[i].x = *((float*)pos); pos += 4;
+            tri->vex[i].y = *((float*)pos); pos += 4;
+            tri->vex[i].z = *((float*)pos); pos += 4;
+        }
+
+        Add(tri);
+    }
+
+    fclose(p_file);
+    p_file = NULL;
+
+    m_bModified = TRUE;
+
+    return 0;
+}
+
+int CSTLModel::SaveBinSTLFile(const char* filename)
+{
+    FILE* p_file = NULL;
+    int trichip_len = 0;
+    char filehead[80] = {0};
+    char buf[50] = {0};
+    char* pos = NULL;
+    int ret = 0;
+    CTriChip* tri = NULL;
+
+    if (IsEmpty())
+        return -1;
+
+    p_file = fopen(filename, "wb");
+    if (!p_file)
+        return -1;
+
+    //write head
+    ret = fwrite(filehead, sizeof(filehead), 1, p_file);
+    if (ret <= 0) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    //write len
+    trichip_len = m_TriList.GetSize();
+    ret = fwrite(&trichip_len, sizeof(trichip_len), 1, p_file);
+    if (ret <= 0) {
+        fclose(p_file);
+        p_file = NULL;
+        return -1;
+    }
+
+    for(int i=0; i < trichip_len; i++) {
+        tri = m_TriList[i];
+        ASSERT(tri);
+
+        pos = buf;
+        *((float*)pos) = tri->normal.dx; pos += 4;
+        *((float*)pos) = tri->normal.dy; pos += 4;
+        *((float*)pos) = tri->normal.dz; pos += 4;
+
+        for (int n = 0; n < 3; n++) {
+            *((float*)pos) = tri->vex[n].x; pos += 4;
+            *((float*)pos) = tri->vex[n].y; pos += 4;
+            *((float*)pos) = tri->vex[n].z; pos += 4;
+        }
+
+        ret = fwrite(buf, sizeof(buf), 1, p_file);
+        if (ret <= 0) {
+            fclose(p_file);
+            p_file = NULL;
+            return -1;
+        }
+    }
+
+    fclose(p_file);
+    p_file = NULL;
+
+    return 0;
+}
+
+/*-----------------------------------------------------------------------------
 Function: Move in directions with a distance
 Params: dx[IN] -- x direction distance
         dy[IN] -- y direction distance
@@ -231,6 +402,9 @@ int CSTLModel::MoveRelative(double dx, double dy, double dz)
     CTriChip* tri = NULL;
 
     if (IsEmpty())
+        return -1;
+
+    if (IS_ZERO(dx) && IS_ZERO(dy) && IS_ZERO(dz))
         return -1;
 
     for(int i=0; i < m_TriList.GetSize(); i++) {
@@ -336,6 +510,35 @@ int CSTLModel::Scale(CPoint3D ref_pt, double fx, double fy, double fz)
 
         for (int n = 0; n < 3; n++)
             ScalePoint(ref_pt, tri->vex[n], fx, fy, fz);
+    }
+
+    m_bModified = TRUE;
+
+    return 0;
+}
+
+/*-----------------------------------------------------------------------------
+Function: unit conversion by multiple a factor
+Params: factor[IN] -- multiple
+Return: 0  -- modified
+        -1 -- not modified
+-----------------------------------------------------------------------------*/
+int CSTLModel::UnitConversion(double factor)
+{
+    CTriChip* tri = NULL;
+
+    if (IsEmpty())
+        return -1;
+
+    for(int i=0; i < m_TriList.GetSize(); i++) {
+        tri = m_TriList[i];
+        ASSERT(tri);
+
+        for(int n = 0; n < 3; n++) {
+            tri->vex[n].x *= factor;
+            tri->vex[n].y *= factor;
+            tri->vex[n].z *= factor;
+        }
     }
 
     m_bModified = TRUE;
@@ -536,7 +739,7 @@ Params: file[IN] -- file name
 Return: 0  -- success
         -1 -- failed
 -------------------------------------------------------------------*/
-int CPart::ExportModel(LPCTSTR file)
+int CPart::ExportModel(LPCTSTR file, int format)
 {
     FILE *p_file = NULL;
     char szFilePath[256] = {0};
@@ -597,7 +800,7 @@ int CPart::ExportModel(LPCTSTR file)
             return -1;
         }
 
-        ((CSTLModel*)m_EntList[i])->SaveSTLFile(szSTLFileName);
+        ((CSTLModel*)m_EntList[i])->SaveSTLFile(szSTLFileName, format);
     }
 
     fclose(p_file);
@@ -606,7 +809,7 @@ int CPart::ExportModel(LPCTSTR file)
     return 0;
 }
 
-int CPart::ExportSTLFile(LPCTSTR file)
+int CPart::ExportSTLFile(LPCTSTR file, int format)
 {
     CSTLModel* p_stlmodel = NULL;
     char szFilePath[256] = {0};
@@ -622,7 +825,7 @@ int CPart::ExportSTLFile(LPCTSTR file)
     p_stlmodel = (CSTLModel*)GetSelectedObject();
     ASSERT(p_stlmodel);
 
-    return p_stlmodel->SaveSTLFile(szFilePath);
+    return p_stlmodel->SaveSTLFile(szFilePath, format);
 }
 
 /*-----------------------------------------------------------------------------
@@ -800,6 +1003,154 @@ int CPart::ScaleObject(double fx, double fy, double fz)
         m_bModified = TRUE;
 
     return modify_flag ? 0 : -1;
+}
+
+int CPart::UnitConvertion(double factor)
+{
+    CSTLModel* p_stlmodel = NULL;
+    int i = 0;
+    int modify_flag = 0;
+
+    if (IsEmpty())
+        return -1;
+
+    for (i = 0; i < m_EntList.GetSize(); i++) {
+        p_stlmodel = (CSTLModel*)m_EntList[i];
+        if (p_stlmodel->UnitConversion(factor) == 0)
+            modify_flag = 1;
+    }
+
+    if (modify_flag)
+        m_bModified = TRUE;
+
+    return modify_flag ? 0 : -1;
+}
+
+/*-----------------------------------------------------------------------------
+Function: Align parts in the workstation along x direction.
+
+      For each part, check whether the part can be placed in the current row by
+      the following two condition:
+         x_cur + part_length + margin <= workstation_length
+         y_cur + part_width+ margin <= workstation_width
+
+       1. If the part can be placed, move it to new position and update some
+          temperate data.
+            y_cur += part_width + gap
+            row_max_length = max(row_max_length, part_length)
+
+       2. If the part can not be placed, we should move to a new row to calculate.
+         2.1 Move to next row£º
+              x_cur += row_max_length + gap
+              y_cur = margin
+              x_length = 0
+
+         2.2 Check whether in the new position, the part can be place in the
+             workstation.
+
+         2.3 If the part can be placed in the new row, move it to new position 
+             and update some temperate data.
+               y_cur += part_width + gap
+               row_max_length = max(row_max_length, part_length)
+
+         2.4 If the part can not be placed in the new row, we return -1.
+
+Params: ws_length[IN] -- work station length
+        ws_width[IN] -- work station width
+        margin[IN] -- margin of the part from workstation
+        gap[IN] -- gap between two parts
+        direction[IN] -- along axis, 0 -- x, 1 -- y
+Return: 0  -- can align in the workstation
+        -1 -- can not align in the workstation
+-----------------------------------------------------------------------------*/
+int CPart::AlignPartsAlong(double ws_length, double ws_width, 
+    double margin, double gap, int direction)
+{
+    CSTLModel* p_stlmodel = NULL;
+    int i = 0;
+    int modify_flag = 0;
+
+    double x_cur = margin;
+    double y_cur = margin;
+    double row_max_length = 0;
+    double part_length = 0;
+    double part_width = 0;
+
+    CBox3D box;
+
+    if (IsEmpty())
+        return 0;
+
+    ASSERT(direction >=0 && direction <= 1);
+
+    for (i = 0; i < m_EntList.GetSize(); i++) {
+        p_stlmodel = (CSTLModel*)m_EntList[i];
+
+        if (!p_stlmodel->GetBox(box))
+            return -1;
+
+        //calculate part dimension
+        part_length = box.x1 - box.x0;
+        part_width = box.y1 - box.y0;
+
+        //check whether the part can be placed
+        if (x_cur + part_length <= ws_length - margin &&
+            y_cur + part_width <= ws_width - margin) {
+            //move to new position
+            if (p_stlmodel->MoveRelative(x_cur - box.x0, y_cur - box.y0, -box.z0) == 0)
+                modify_flag = 1;
+
+            if (direction == 1) {
+                y_cur += part_width + gap;
+                row_max_length = max(row_max_length, part_length);
+            }
+            else {
+                x_cur += part_length + gap;
+                row_max_length = max(row_max_length, part_width);
+            }
+        }
+        else {
+            //move to next row
+            if (direction == 1) {
+                x_cur += row_max_length + gap;
+                y_cur = margin;
+                row_max_length = 0;
+            }
+            else {
+                x_cur = margin;
+                y_cur += row_max_length + gap;
+                row_max_length = 0;
+            }
+
+            //check whether the part can be placed in the new row
+            if (x_cur + part_length <= ws_length - margin &&
+                y_cur + part_width <= ws_width - margin) {
+                //move to new position and update
+                if (p_stlmodel->MoveRelative(x_cur - box.x0, y_cur - box.y0, -box.z0) == 0)
+                    modify_flag = 1;
+
+                if (direction == 1) {
+                    y_cur += part_width + gap;
+                    row_max_length = max(row_max_length, part_length);
+                }
+                else {
+                    x_cur += part_length + gap;
+                    row_max_length = max(row_max_length, part_width);
+                }
+            }
+            else {
+                if (modify_flag)
+                    m_bModified = TRUE;
+
+                return -1;
+            }
+        }
+    }
+
+    if (modify_flag)
+        m_bModified = TRUE;
+
+    return 0;
 }
 
 void CPart::SetHighLightStat(BOOL bHighLight)

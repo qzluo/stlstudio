@@ -8,7 +8,7 @@ COpenGLDC::COpenGLDC(HWND hWnd):m_hWnd(hWnd)
     m_hRC = NULL;
     m_hDC = NULL;
     m_clr = RGB(255, 255, 255);
-    m_clrHighLight = RGB(0, 255, 0);
+    m_clrHighLight = RGB(0, 48, 0x00);
     m_bShading = TRUE;
     m_bSelectionMode = FALSE;
 
@@ -76,7 +76,9 @@ void COpenGLDC::GLSetupRC()
 {
     GLfloat lightAmbient[] = {0.75, 0.75, 0.75, 1};
     GLfloat lightDiffuse[] = {1, 1, 1, 1};
-    GLfloat lightPos[] = {1, 1, 1, 0};
+    GLfloat lightPos[] = {-1, 1, 1, 0};
+    GLfloat lightPos1[] = {1, 1, -1, 0};
+    GLfloat lightPos2[] = {1, 1, 1, 0};
 
     glClearColor(0.75, 0.75, 0.75, 0.0f);
     glEnable(GL_DEPTH_TEST);		//Hidden surface removal
@@ -88,18 +90,87 @@ void COpenGLDC::GLSetupRC()
     glLightfv(GL_LIGHT0, GL_DIFFUSE, lightDiffuse);
     glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 
+    //set light1 property
+    glLightfv(GL_LIGHT1, GL_AMBIENT, lightAmbient);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, lightDiffuse);
+    glLightfv(GL_LIGHT1, GL_POSITION, lightPos1);
+
+    //set light2 property
+    glLightfv(GL_LIGHT2, GL_AMBIENT, lightAmbient);
+    glLightfv(GL_LIGHT2, GL_DIFFUSE, lightDiffuse);
+    glLightfv(GL_LIGHT2, GL_POSITION, lightPos2);
+
     //enable light0
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
+    glEnable(GL_LIGHT2);
 
     //set material
     //SetMaterialColor(RGB(225,175,22));
-    SetMaterialColor(RGB(64,64,64));
+    SetMaterialColor(RGB(30, 30, 30));
 
     //frame color
     SetColor(RGB(255, 255, 255));
 
     m_bShading = TRUE;
+}
+
+int COpenGLDC::SetParams(POPENGLDCPARAMS params)
+{
+    if (!params)
+        return -1;
+
+    if (params->coord_gap < 0)
+        return -1;
+
+    if (params->axis_len <= 0)
+        return -1;
+
+    if (params->axis_linewidth < 0)
+        return -1;
+
+    if (params->ws_length <= 0)
+        return -1;
+
+    if (params->ws_width <= 0)
+        return -1;
+
+    if (params->ws_height <= 0)
+        return -1;
+
+    if (params->ws_gap <= 0)
+        return -1;
+
+    m_coord_gap = params->coord_gap;
+    m_axis_len = params->axis_len;
+    m_axis_linewidth = params->axis_linewidth;
+
+    //to draw work station
+    m_ws_length = params->ws_length;
+    m_ws_width = params->ws_width;
+    m_ws_height = params->ws_height;
+    m_ws_gap = params->ws_gap;
+
+    return 0;
+}
+
+int COpenGLDC::GetParams(POPENGLDCPARAMS params)
+{
+    if (!params)
+        return -1;
+
+    params->coord_gap = m_coord_gap;
+    params->axis_len = m_axis_len;
+    params->axis_linewidth = m_axis_linewidth;
+
+    //to draw work station
+    params->ws_length = m_ws_length;
+    params->ws_width = m_ws_width;
+    params->ws_height = m_ws_height;
+    params->ws_gap = m_ws_gap;
+
+    return 0;
 }
 
 void COpenGLDC::GLResize(int w,int h)

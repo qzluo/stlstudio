@@ -1,0 +1,43 @@
+﻿Build started 2017/1/7 16:15:41.
+     1>Project "D:\code\work\software\wxlstlstudio\stlstudio\stlstudio.vcxproj" on node 2 (build target(s)).
+     1>InitializeBuildStatus:
+         Creating "Release\stlstudio.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         All outputs are up-to-date.
+         All outputs are up-to-date.
+       ResourceCompile:
+         All outputs are up-to-date.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\code\work\software\wxlstlstudio\stlstudio\Release\stlstudio.exe" /INCREMENTAL:NO /NOLOGO /LIBPATH:..\lib\rel GeomCalc.lib opengl32.lib glu32.lib glaux.lib /MANIFEST /ManifestFile:"Release\stlstudio.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"D:\code\work\software\wxlstlstudio\stlstudio\Release\stlstudio.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /TLBID:1 /ENTRY:"wWinMainCRTStartup" /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\code\work\software\wxlstlstudio\stlstudio\Release\stlstudio.lib" /MACHINE:X86 Release\stlstudio.res
+         Release\camera.obj
+         Release\DlgMoveObject.obj
+         Release\DlgRotateObject.obj
+         Release\DlgScaleObject.obj
+         Release\Entity.obj
+         Release\glView.obj
+         Release\MainFrm.obj
+         Release\OpenGLDC.obj
+         Release\public.obj
+         Release\stdafx.obj
+         Release\stlstudio.obj
+         Release\stlstudioDoc.obj
+         Release\stlstudioView.obj
+         Release\test.obj
+         Generating code
+         Finished generating code
+         stlstudio.vcxproj -> D:\code\work\software\wxlstlstudio\stlstudio\Release\stlstudio.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"D:\code\work\software\wxlstlstudio\stlstudio\Release\stlstudio.exe;#1" /manifest Release\stlstudio.exe.intermediate.manifest "C:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\Include\Manifest\dpiaware.manifest"
+       PostBuildEvent:
+         copy D:\code\work\software\wxlstlstudio\stlstudio\Release\*.exe ..\bin\rel\*
+         :VCEnd
+         D:\code\work\software\wxlstlstudio\stlstudio\Release\stlstudio.exe
+         已复制         1 个文件。
+       FinalizeBuildStatus:
+         Deleting file "Release\stlstudio.unsuccessfulbuild".
+         Touching "Release\stlstudio.lastbuildstate".
+     1>Done Building Project "D:\code\work\software\wxlstlstudio\stlstudio\stlstudio.vcxproj" (build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:07.46

@@ -63,6 +63,7 @@ BOOL CstlstudioApp::InitInstance()
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
 	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+    //WriteProfileInt(_T("key name"), _T("Entry name"), 33);
 	LoadStdProfileSettings(4);  // Load standard INI file options (including MRU)
 
 

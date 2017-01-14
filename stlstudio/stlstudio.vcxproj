@@ -27,7 +27,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -69,6 +69,9 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <PostBuildEvent>
+      <Command>copy $(OutputPath)*.exe ..\bin\dbg\*</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -78,12 +81,15 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>GeomCalc.lib;opengl32.lib;glu32.lib;glaux.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\lib\rel</AdditionalLibraryDirectories>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -95,6 +101,9 @@
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
+    <PostBuildEvent>
+      <Command>copy $(OutputPath)*.exe ..\bin\rel\*</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\..\..\..\test\toolbartest\res\tb_displ.bmp" />
@@ -111,9 +120,12 @@
   <ItemGroup>
     <ClInclude Include="..\inc\GeomCalc\CadBase.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="define.h" />
+    <ClInclude Include="DlgAutoPlacement.h" />
     <ClInclude Include="DlgMoveObject.h" />
     <ClInclude Include="DlgRotateObject.h" />
     <ClInclude Include="DlgScaleObject.h" />
+    <ClInclude Include="DlgSettings.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="glView.h" />
     <ClInclude Include="MainFrm.h" />
@@ -125,14 +137,17 @@
     <ClInclude Include="stlstudio.h" />
     <ClInclude Include="stlstudioDoc.h" />
     <ClInclude Include="stlstudioView.h" />
+    <ClInclude Include="studio_data.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="test.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="camera.cpp" />
+    <ClCompile Include="DlgAutoPlacement.cpp" />
     <ClCompile Include="DlgMoveObject.cpp" />
     <ClCompile Include="DlgRotateObject.cpp" />
     <ClCompile Include="DlgScaleObject.cpp" />
+    <ClCompile Include="DlgSettings.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="glView.cpp" />
     <ClCompile Include="MainFrm.cpp" />
@@ -145,6 +160,7 @@
     <ClCompile Include="stlstudio.cpp" />
     <ClCompile Include="stlstudioDoc.cpp" />
     <ClCompile Include="stlstudioView.cpp" />
+    <ClCompile Include="studio_data.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>

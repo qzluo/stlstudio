@@ -15,6 +15,9 @@
 #include "DlgMoveObject.h"
 #include "DlgRotateObject.h"
 #include "DlgScaleObject.h"
+#include "DlgAutoPlacement.h"
+
+#include "studio_data.h"
 
 
 #include <propkey.h>
@@ -36,6 +39,10 @@ BEGIN_MESSAGE_MAP(CstlstudioDoc, CDocument)
     ON_COMMAND(ID_FILE_OPENSTL_PART, &CstlstudioDoc::OnFileOpenstlPart)
     ON_COMMAND(ID_FILE_SAVESTL_PART, &CstlstudioDoc::OnFileSavestlPart)
     ON_COMMAND(ID_FILE_REMOVESTLPART, &CstlstudioDoc::OnFileRemovestlpart)
+    ON_COMMAND(ID_UNITCONVERSION_MMTOINCH, &CstlstudioDoc::OnUnitconversionMmtoinch)
+    ON_COMMAND(ID_UNITCONVERSION_INCHTOMM, &CstlstudioDoc::OnUnitconversionInchtomm)
+    ON_COMMAND(ID_EDIT_ALIGNOBJECT, &CstlstudioDoc::OnEditAlignobject)
+    ON_COMMAND(ID_EXPORTSTLPART_ASSTL, &CstlstudioDoc::OnExportstlpartAsstl)
 END_MESSAGE_MAP()
 
 
@@ -293,6 +300,18 @@ void CstlstudioDoc::OnFileOpenstlPart()
 void CstlstudioDoc::OnFileSavestlPart()
 {
     // TODO: Add your command handler code here
+    ExportStlFile(STL_FILE_FORMAT_ASCII);
+}
+
+void CstlstudioDoc::OnExportstlpartAsstl()
+{
+    // TODO: Add your command handler code here
+    ExportStlFile(STL_FILE_FORMAT_BIN);
+}
+
+void CstlstudioDoc::ExportStlFile(int format)
+{
+    // TODO: Add your command handler code here
     if (m_Part.IsEmpty())
         return;
 
@@ -310,7 +329,7 @@ void CstlstudioDoc::OnFileSavestlPart()
 
     if(dlg.DoModal()==IDOK) {
         filePath = dlg.GetPathName();
-        m_Part.ExportSTLFile(filePath);
+        m_Part.ExportSTLFile(filePath, format);
     }
 }
 
@@ -335,3 +354,45 @@ void CstlstudioDoc::OnFileRemovestlpart()
             UpdateAllViews(NULL);
     }
 }
+
+void CstlstudioDoc::OnUnitconversionMmtoinch()
+{
+    // TODO: Add your command handler code here
+    if (m_Part.UnitConvertion(1 / 25.4) == 0)
+        UpdateAllViews(NULL);
+}
+
+void CstlstudioDoc::OnUnitconversionInchtomm()
+{
+    // TODO: Add your command handler code here
+    if (m_Part.UnitConvertion(25.4) == 0)
+        UpdateAllViews(NULL);
+}
+
+void CstlstudioDoc::OnEditAlignobject()
+{
+    // TODO: Add your command handler code here
+    if (m_Part.IsEmpty())
+        return;
+
+    STUDIOPARAMS studioparams = {};
+    GetStduioParams(&studioparams);
+
+    CDlgAutoPlacement dlg;
+    PLACEMENTPARAMS params = {};
+    params.margin = studioparams.align_margin;
+    params.gap = studioparams.align_gap;
+    params.axis = PLACEMENT_AXIS_ALONG_Y;
+
+    dlg.m_params = &params;
+
+    if (IDOK == dlg.DoModal()) {
+        if (m_Part.AlignPartsAlong(studioparams.ws_length, studioparams.ws_width,
+            params.margin, params.gap, params.axis) != 0)
+            MessageBox(NULL, _T("Not all the objects can by placed in the work station."), 
+            _T("Align Object"),NULL);
+
+        UpdateAllViews(NULL);
+    }
+}
+

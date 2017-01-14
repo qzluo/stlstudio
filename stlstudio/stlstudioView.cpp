@@ -15,8 +15,11 @@
 #include "stlstudioDoc.h"
 #include "stlstudioView.h"
 
+#include "define.h"
 #include "Entity.h"
+#include "studio_data.h"
 
+#include "DlgSettings.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -29,6 +32,7 @@ IMPLEMENT_DYNCREATE(CstlstudioView, CGLView)
 
 BEGIN_MESSAGE_MAP(CstlstudioView, CGLView)
     ON_WM_CREATE()
+    ON_WM_DESTROY()
     ON_COMMAND(ID_VIEW_ZOOM_IN, &CstlstudioView::OnViewZoomIn)
     ON_COMMAND(ID_VIEW_ZOOM_OUT, &CstlstudioView::OnViewZoomOut)
     ON_COMMAND(ID_VIEW_FRONT_VIEW, &CstlstudioView::OnViewFrontView)
@@ -49,6 +53,7 @@ BEGIN_MESSAGE_MAP(CstlstudioView, CGLView)
     ON_COMMAND(ID_VIEW_SHOWWORKSTATION, &CstlstudioView::OnViewShowworkstation)
     ON_UPDATE_COMMAND_UI(ID_VIEW_SHOWWORKSTATION, &CstlstudioView::OnUpdateViewShowworkstation)
     ON_COMMAND(ID_VIEW_ZOOMWORKSTATION, &CstlstudioView::OnViewZoomworkstation)
+    ON_COMMAND(ID_TOOLS_SETTINGS, &CstlstudioView::OnToolsSettings)
 END_MESSAGE_MAP()
 
 // CstlstudioView construction/destruction
@@ -94,8 +99,153 @@ int CstlstudioView::OnCreate(LPCREATESTRUCT lpCreateStruct)
         return -1;
 
     setDragMove(TRUE);
+    InitCfg();
 
     return 0;
+}
+
+void CstlstudioView::OnDestroy()
+{
+    SaveCfg();
+    CGLView::OnDestroy();
+
+    // TODO: Add your message handler code here
+}
+
+void CstlstudioView::InitCfg(void)
+{
+    //read work station parameters
+    CString strTemp;
+    CString strFileName;
+    OPENGLDCPARAMS params = {};
+    STUDIOPARAMS studioparams = {};
+
+    GetModuleFileName(NULL, strFileName.GetBuffer(256), 256);
+    strFileName.ReleaseBuffer();
+    int nPos = strFileName.ReverseFind( _T('\\') );
+    if( nPos < 0 )
+        return ;
+
+    strFileName = strFileName.Left( nPos ) + _T("\\") + CONFIG_FILE;
+
+    //work station
+    int ret = GetPrivateProfileInt(WORKSTATION, WS_VISIBLE, 1, strFileName);
+    m_bIsShowWorkStation = ret ? TRUE : FALSE;
+    GetPrivateProfileInt(WORKSTATION, WS_VISIBLE, 1, strFileName);
+
+    GetPrivateProfileString(WORKSTATION, WS_LENGTH, WS_LENGTH_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    params.ws_length = _wtof(strTemp.GetBuffer());
+    studioparams.ws_length = params.ws_length;
+
+    GetPrivateProfileString(WORKSTATION, WS_WIDTH, WS_WIDTH_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    params.ws_width = _wtof(strTemp.GetBuffer());
+    studioparams.ws_width = params.ws_width;
+
+    GetPrivateProfileString(WORKSTATION, WS_HEIGHT, WS_HEIGHT_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    params.ws_height = _wtof(strTemp.GetBuffer());
+    studioparams.ws_height = params.ws_height;
+
+    GetPrivateProfileString(WORKSTATION, WS_GAP, WS_GAP_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    params.ws_gap = _wtof(strTemp.GetBuffer());
+    studioparams.ws_gap = params.ws_gap;
+
+    //coordinate axis
+    GetPrivateProfileString(COORDAXIS, COORD_GAP, COORD_GAP_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    params.coord_gap = _wtof(strTemp.GetBuffer());
+    studioparams.coord_gap = params.coord_gap;
+
+    GetPrivateProfileString(COORDAXIS, COORD_AXIS_LEN, COORD_AXIS_LEN_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    params.axis_len = _wtof(strTemp.GetBuffer());
+    studioparams.axis_len = params.axis_len;
+
+    GetPrivateProfileString(COORDAXIS, COORD_AXIS_LINEWIDTH, COORD_AXIS_LINEWIDTH_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    params.axis_linewidth = _wtof(strTemp.GetBuffer());
+    studioparams.axis_linewidth = params.axis_linewidth;
+
+    GetPrivateProfileString(ALLIGN, ALLIGN_MARGIN, ALLIGN_MARGIN_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    studioparams.align_margin = _wtof(strTemp.GetBuffer());
+
+    GetPrivateProfileString(ALLIGN, ALLIGN_GAP, ALLIGN_GAP_DEF,
+        strTemp.GetBuffer(32), 32, strFileName);
+    strTemp.ReleaseBuffer();
+    studioparams.align_gap = _wtof(strTemp.GetBuffer());
+
+    SetStduioParams(&studioparams);
+
+    m_pGLDC->SetParams(&params);
+}
+
+void CstlstudioView::SaveCfg(void)
+{
+    OPENGLDCPARAMS params = {};
+    if (!m_pGLDC)
+        return;
+
+    m_pGLDC->GetParams(&params);
+
+    STUDIOPARAMS studioparams = {};
+    if (GetStduioParams(&studioparams))
+        return;
+
+    CString strTemp;
+    CString strFileName;
+
+    GetModuleFileName(NULL, strFileName.GetBuffer(256), 256);
+    strFileName.ReleaseBuffer();
+    int nPos = strFileName.ReverseFind( _T('\\') );
+    if( nPos < 0 )
+        return ;
+
+    strFileName = strFileName.Left( nPos ) + _T("\\") + CONFIG_FILE;
+
+    //work station
+    int iVisible = m_bIsShowWorkStation ? 1 : 0;
+    strTemp.Format(_T("%d"), iVisible);
+    WritePrivateProfileString(WORKSTATION, WS_VISIBLE, strTemp, strFileName);
+
+    strTemp.Format(_T("%.2f"), params.ws_length);
+    WritePrivateProfileString(WORKSTATION, WS_LENGTH, strTemp, strFileName);
+
+    strTemp.Format(_T("%.2f"), params.ws_width);
+    WritePrivateProfileString(WORKSTATION, WS_WIDTH, strTemp, strFileName);
+
+    strTemp.Format(_T("%.2f"), params.ws_height);
+    WritePrivateProfileString(WORKSTATION, WS_HEIGHT, strTemp, strFileName);
+
+    strTemp.Format(_T("%.2f"), params.ws_gap);
+    WritePrivateProfileString(WORKSTATION, WS_GAP, strTemp, strFileName);
+
+    //coordinate axis
+    strTemp.Format(_T("%.2f"), params.coord_gap);
+    WritePrivateProfileString(COORDAXIS, COORD_GAP, strTemp, strFileName);
+
+    strTemp.Format(_T("%.2f"), params.axis_len);
+    WritePrivateProfileString(COORDAXIS, COORD_AXIS_LEN, strTemp, strFileName);
+
+    strTemp.Format(_T("%.2f"), params.axis_linewidth);
+    WritePrivateProfileString(COORDAXIS, COORD_AXIS_LINEWIDTH, strTemp, strFileName);
+
+    strTemp.Format(_T("%.2f"), studioparams.align_margin);
+    WritePrivateProfileString(ALLIGN, ALLIGN_MARGIN, strTemp, strFileName);
+
+    strTemp.Format(_T("%.2f"), studioparams.align_gap);
+    WritePrivateProfileString(ALLIGN, ALLIGN_GAP, strTemp, strFileName);
 }
 
 void CstlstudioView::RenderScene(COpenGLDC* pDC)
@@ -338,6 +488,56 @@ void CstlstudioView::OnViewZoomworkstation()
     // TODO: Add your command handler code here
     if(m_pGLDC) {
         m_pGLDC->ZoomWorkStation();
+        Invalidate();
+    }
+}
+
+void CstlstudioView::OnToolsSettings()
+{
+    // TODO: Add your command handler code here
+    OPENGLDCPARAMS gl_params = {};
+    if (!m_pGLDC)
+        return;
+
+    m_pGLDC->GetParams(&gl_params);
+
+    STUDIOPARAMS studioparams = {};
+    if (GetStduioParams(&studioparams))
+        return;
+
+    CDlgSettings dlg;
+    SETTINGSPARAMS params = {0};
+    params.ws_length = studioparams.ws_length;
+    params.ws_width = studioparams.ws_width;
+    params.ws_height = studioparams.ws_height;
+    params.align_margin = studioparams.align_margin;
+    params.align_gap = studioparams.align_gap;
+
+    dlg.m_params = &params;
+
+    if (IDOK == dlg.DoModal()) {
+        if (studioparams.ws_length == params.ws_length &&
+            studioparams.ws_width == params.ws_width &&
+            studioparams.ws_height == params.ws_height &&
+            studioparams.align_margin == params.align_margin &&
+            studioparams.align_gap == params.align_gap)
+            return;
+
+        studioparams.ws_length = params.ws_length;
+        studioparams.ws_width = params.ws_width;
+        studioparams.ws_height = params.ws_height;
+        studioparams.align_margin = params.align_margin;
+        studioparams.align_gap = params.align_gap;
+
+        if (SetStduioParams(&studioparams))
+            return;
+
+        gl_params.ws_length = params.ws_length;
+        gl_params.ws_width = params.ws_width;
+        gl_params.ws_height = params.ws_height;
+
+        m_pGLDC->SetParams(&gl_params);
+
         Invalidate();
     }
 }

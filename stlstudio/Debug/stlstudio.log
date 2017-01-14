@@ -1,4 +1,4 @@
-﻿Build started 2017/1/6 11:46:04.
+﻿Build started 2017/1/14 16:44:59.
      1>Project "D:\code\work\software\wxlstlstudio\stlstudio\stlstudio.vcxproj" on node 2 (clean target(s)).
      1>_PrepareForClean:
          Deleting file "Debug\stlstudio.lastbuildstate".
@@ -6,4 +6,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.01
+Time Elapsed 00:00:00.03

@@ -6,6 +6,9 @@
 
 #define MODEL_FILE_HEAD  "WXLSTLMODEL"
 
+#define STL_FILE_FORMAT_BIN     0
+#define STL_FILE_FORMAT_ASCII   1
+
 
 class CEntity : public CObject  
 {
@@ -73,8 +76,16 @@ public:
     //display
     void Draw(COpenGLDC* pDC);
 
+    //save and load
     int LoadSTLFile(const char* filename);
+    int SaveSTLFile(const char* filename, int format);
+
+    int LoadASCSTLFile(const char* filename);
     int SaveSTLFile(const char* filename);
+
+    int LoadBinSTLFile(const char* filename);
+    int SaveBinSTLFile(const char* filename);
+
 
     //operate object
     int MoveRelative(double dx, double dy, double dz);
@@ -82,6 +93,7 @@ public:
     int Rotate(VECTOR3D bv, CPoint3D ref_pt, double angle);
     int ScaleAroundCenter(double fx, double fy, double fz);
     int Scale(CPoint3D ref_pt, double fx, double fy, double fz);
+    int UnitConversion(double factor);
 
     //for select operation
     void ReverseHighLight(void);
@@ -119,14 +131,19 @@ public:
     //import and export
     int LoadModel(LPCTSTR file);
     int LoadSTLFile(LPCTSTR file);
-    int ExportModel(LPCTSTR file);
-    int ExportSTLFile(LPCTSTR file);
+    int ExportModel(LPCTSTR file, int format=0);
+    int ExportSTLFile(LPCTSTR file, int format=0);
     int RemoveSelectedObjects(void);
 
     //operate object
     int MoveObject(double dx, double dy, double dz);
     int RotateObject(VECTOR3D bv, double angle);
     int ScaleObject(double fx, double fy, double fz);
+    int UnitConvertion(double factor);
+
+    //align parts
+    int AlignPartsAlong(double ws_length, double ws_width,
+        double margin, double gap, int direction=0);
 
     //select object
     int GetSelectedObjectCount(void);

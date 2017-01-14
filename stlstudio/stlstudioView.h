@@ -28,6 +28,8 @@ protected:
     virtual BOOL GetBox(double& x0,double& y0,double& z0,double& x1,double& y1,double& z1);
 
     void DrawParts(COpenGLDC* pDC);
+    void InitCfg(void);
+    void SaveCfg(void);
 
 #ifdef _DEBUG
     virtual void AssertValid() const;
@@ -39,6 +41,7 @@ protected:
     DECLARE_MESSAGE_MAP()
 public:
     afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+    afx_msg void OnDestroy();
     afx_msg void OnViewZoomIn();
     afx_msg void OnViewZoomOut();
     afx_msg void OnViewFrontView();
@@ -59,6 +62,7 @@ public:
     afx_msg void OnViewShowworkstation();
     afx_msg void OnUpdateViewShowworkstation(CCmdUI *pCmdUI);
     afx_msg void OnViewZoomworkstation();
+    afx_msg void OnToolsSettings();
 };
 
 #ifndef _DEBUG  // debug version in stlstudioView.cpp

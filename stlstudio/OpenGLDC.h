@@ -12,6 +12,16 @@
 #define WS_COLOR_BOTTOM   RGB(0xAD, 0xD8, 0xE6)
 #define WS_COLOR_GRID     RGB(0x99, 0x99, 0x66)
 
+typedef struct tagOpenGLDCParams {
+    double coord_gap;
+    double axis_len;
+    double axis_linewidth;
+    double ws_length;
+    double ws_width;
+    double ws_height;
+    double ws_gap;
+} OPENGLDCPARAMS, *POPENGLDCPARAMS;
+
 class COpenGLDC
 {
 public:
@@ -51,6 +61,8 @@ public:
 public:
     //initialize
     BOOL InitDC();
+    int SetParams(POPENGLDCPARAMS params);
+    int GetParams(POPENGLDCPARAMS params);
 
     void GLResize(int cx,int cy);
 
